@@ -21,19 +21,19 @@ export default function TemplateManager({
   // Umo Editor Ribbon Menu Tab State: 'home', 'insert', 'layout'
   const [umoRibbonTab, setUmoRibbonTab] = useState('home');
   
-  // Custom Editable Percentage Text Width (ScaleX) & Height (ScaleY)
-  const [customScaleX, setCustomScaleX] = useState(100);
-  const [customScaleY, setCustomScaleY] = useState(100);
+  // Custom Editable Text Width (pt) & Text Height (pt) instead of percentages
+  const [textWidthPt, setTextWidthPt] = useState('12.5');
+  const [textHeightPt, setTextHeightPt] = useState('12.5');
 
   // Live Detected Formatting State Under Cursor / Selection
   const [activeFontFamily, setActiveFontFamily] = useState('');
-  const [activeFontSize, setActiveFontSize] = useState('');
+  const [activeFontSize, setActiveFontSize] = useState('12.5');
   const [activeBold, setActiveBold] = useState(false);
   const [activeItalic, setActiveItalic] = useState(false);
   const [activeUnderline, setActiveUnderline] = useState(false);
   const [activeAlignment, setActiveAlignment] = useState('left');
 
-  // Non-blocking notice state (removes popup modal alert)
+  // Non-blocking notice state
   const [editorNotice, setEditorNotice] = useState('');
 
   // Current Template Being Edited
@@ -180,7 +180,7 @@ export default function TemplateManager({
     }
   };
 
-  // Live Auto-Detect Styles Under Cursor or Highlighted Selection (Like MS Word)
+  // Live Auto-Detect Styles Under Cursor or Highlighted Selection (In Pt Units)
   const updateActiveToolbarStateFromSelection = () => {
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
@@ -218,11 +218,10 @@ export default function TemplateManager({
       setActiveFontFamily("'Impact', sans-serif");
     }
 
-    // 2. Detect Font Size
-    const pxSize = parseFloat(computedStyle.fontSize);
-    if (!isNaN(pxSize)) {
-      setActiveFontSize(`${Math.round(pxSize)}`);
-    }
+    // 2. Detect Font Size in pt
+    const pxSize = parseFloat(computedStyle.fontSize) || 12.5;
+    const basePt = (pxSize * 0.75).toFixed(1).replace(/\.0$/, '') || '12.5';
+    setActiveFontSize(`${basePt}`);
 
     // 3. Detect Bold / Italic / Underline
     const weight = computedStyle.fontWeight;
@@ -234,20 +233,26 @@ export default function TemplateManager({
     const align = computedStyle.textAlign || 'left';
     setActiveAlignment(align);
 
-    // 5. Detect Transform ScaleX / ScaleY %
+    // 5. Detect Transform ScaleX / ScaleY -> calculate exact Width (pt) and Height (pt)
+    let scaleX = 1;
+    let scaleY = 1;
     const transform = computedStyle.transform;
     if (transform && transform !== 'none') {
       const match = transform.match(/matrix\(([^)]+)\)/);
       if (match) {
         const parts = match[1].split(',').map(p => parseFloat(p.trim()));
         if (parts.length >= 4) {
-          const scaleX = Math.round(parts[0] * 100);
-          const scaleY = Math.round(parts[3] * 100);
-          if (scaleX > 0) setCustomScaleX(scaleX);
-          if (scaleY > 0) setCustomScaleY(scaleY);
+          scaleX = parts[0] > 0 ? parts[0] : 1;
+          scaleY = parts[3] > 0 ? parts[3] : 1;
         }
       }
     }
+
+    const calculatedWidthPt = (pxSize * 0.75 * scaleX).toFixed(1).replace(/\.0$/, '');
+    const calculatedHeightPt = (pxSize * 0.75 * scaleY).toFixed(1).replace(/\.0$/, '');
+
+    setTextWidthPt(calculatedWidthPt);
+    setTextHeightPt(calculatedHeightPt);
   };
 
   // Handle Selection Bubble Formatting Menu & Live Style Detection
@@ -270,7 +275,7 @@ export default function TemplateManager({
     setShowBubbleMenu(false);
   };
 
-  // Umo Editor Apply Selective Inline Format ONLY to Currently Highlighted / Selected Text
+  // Apply Inline Selection Format in Pt Units
   const applyInlineSelectionStyle = (styleObj) => {
     if (!editorCanvasRef.current) return;
 
@@ -302,7 +307,39 @@ export default function TemplateManager({
     editorCanvasRef.current.focus();
   };
 
-  // Umo Editor Apply Selective Line Spacing or Alignment to Selected Paragraph / Line
+  // Apply Text Width in Pt Units
+  const applyCustomWidthPt = (targetWidthPtVal) => {
+    const numTargetWidthPt = parseFloat(targetWidthPtVal);
+    if (isNaN(numTargetWidthPt) || numTargetWidthPt <= 0) return;
+
+    const selection = window.getSelection();
+    let currentBasePt = parseFloat(activeFontSize) || 12.5;
+
+    // Calculate scale factor: targetWidthPt / currentBasePt
+    const scaleFactorX = (numTargetWidthPt / currentBasePt).toFixed(3);
+    applyInlineSelectionStyle({
+      display: 'inline-block',
+      transform: `scaleX(${scaleFactorX})`,
+      letterSpacing: '0.5px'
+    });
+  };
+
+  // Apply Text Height in Pt Units
+  const applyCustomHeightPt = (targetHeightPtVal) => {
+    const numTargetHeightPt = parseFloat(targetHeightPtVal);
+    if (isNaN(numTargetHeightPt) || numTargetHeightPt <= 0) return;
+
+    let currentBasePt = parseFloat(activeFontSize) || 12.5;
+
+    // Calculate scale factor: targetHeightPt / currentBasePt
+    const scaleFactorY = (numTargetHeightPt / currentBasePt).toFixed(3);
+    applyInlineSelectionStyle({
+      display: 'inline-block',
+      transform: `scaleY(${scaleFactorY})`
+    });
+  };
+
+  // Umo Editor Apply Selective Line Spacing or Alignment
   const applyBlockLineStyle = (styleObj) => {
     const selection = window.getSelection();
     if (!selection.rangeCount) return;
@@ -565,7 +602,7 @@ export default function TemplateManager({
           </div>
         </>
       ) : (
-        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH LIVE AUTO-DETECT TOOLBAR STATE */
+        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH EXACT PT-BASED WIDTH & HEIGHT AUTO-DETECTION */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Top Control Bar */}
           <div className="card" style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -777,18 +814,18 @@ export default function TemplateManager({
 
                     {/* Font Size with Live Auto-Detection */}
                     <div className="form-group" style={{ margin: 0, width: '100px' }}>
-                      <label className="form-label" style={{ fontSize: '0.7rem' }}>Ukuran Font</label>
+                      <label className="form-label" style={{ fontSize: '0.7rem' }}>Ukuran Font (pt)</label>
                       <select
                         className="form-select"
                         style={{ padding: '4px 8px', fontSize: '0.8rem', fontWeight: activeFontSize ? 700 : 400 }}
-                        onChange={e => applyInlineSelectionStyle({ fontSize: `${e.target.value}px` })}
+                        onChange={e => applyInlineSelectionStyle({ fontSize: `${e.target.value}pt` })}
                         value={activeFontSize}
                       >
                         <option value="" disabled>-- Size --</option>
                         <option value="10">10 pt</option>
                         <option value="11">11 pt</option>
                         <option value="12">12 pt</option>
-                        <option value="13">13 pt</option>
+                        <option value="12.5">12.5 pt</option>
                         <option value="14">14 pt</option>
                         <option value="16">16 pt</option>
                         <option value="18">18 pt</option>
@@ -815,74 +852,68 @@ export default function TemplateManager({
                       </div>
                     </div>
 
-                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR LEBAR TEKS (%) */}
+                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR LEBAR TEKS (pt) */}
                     <div className="form-group" style={{ margin: 0, width: '150px' }}>
                       <label className="form-label" style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)' }}>
-                        <MoveHorizontal size={11} /> Lebar Teks (%)
+                        <MoveHorizontal size={11} /> Lebar Teks (pt)
                       </label>
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                         <input
                           type="number"
-                          min="50"
-                          max="400"
+                          step="0.5"
+                          min="4"
+                          max="60"
                           className="form-input"
                           style={{ padding: '4px 6px', fontSize: '0.8rem', width: '70px', borderColor: 'var(--accent-cyan)' }}
-                          value={customScaleX}
-                          onChange={e => setCustomScaleX(e.target.value)}
+                          value={textWidthPt}
+                          onChange={e => setTextWidthPt(e.target.value)}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              const val = parseFloat(customScaleX) || 100;
-                              applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleX(${val / 100})`, letterSpacing: '1px' });
+                              applyCustomWidthPt(textWidthPt);
                             }
                           }}
-                          placeholder="100"
+                          placeholder="12.5"
                         />
                         <button
                           type="button"
                           className="pill-btn"
                           style={{ padding: '4px 6px', fontSize: '0.75rem', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}
-                          onClick={() => {
-                            const val = parseFloat(customScaleX) || 100;
-                            applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleX(${val / 100})`, letterSpacing: '1px' });
-                          }}
+                          onClick={() => applyCustomWidthPt(textWidthPt)}
                         >
                           Ubah
                         </button>
                       </div>
                     </div>
 
-                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR TINGGI TEKS (%) */}
+                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR TINGGI TEKS (pt) */}
                     <div className="form-group" style={{ margin: 0, width: '150px' }}>
                       <label className="form-label" style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)' }}>
-                        <MoveVertical size={11} /> Tinggi Teks (%)
+                        <MoveVertical size={11} /> Tinggi Teks (pt)
                       </label>
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                         <input
                           type="number"
-                          min="50"
-                          max="400"
+                          step="0.5"
+                          min="4"
+                          max="60"
                           className="form-input"
                           style={{ padding: '4px 6px', fontSize: '0.8rem', width: '70px', borderColor: 'var(--accent-emerald)' }}
-                          value={customScaleY}
-                          onChange={e => setCustomScaleY(e.target.value)}
+                          value={textHeightPt}
+                          onChange={e => setTextHeightPt(e.target.value)}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
-                              const val = parseFloat(customScaleY) || 100;
-                              applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleY(${val / 100})` });
+                              applyCustomHeightPt(textHeightPt);
                             }
                           }}
-                          placeholder="100"
+                          placeholder="12.5"
                         />
                         <button
                           type="button"
                           className="pill-btn"
                           style={{ padding: '4px 6px', fontSize: '0.75rem', borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' }}
-                          onClick={() => {
-                            const val = parseFloat(customScaleY) || 100;
-                            applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleY(${val / 100})` });
-                          }}
+                          onClick={() => applyCustomHeightPt(textHeightPt)}
                         >
                           Ubah
                         </button>
@@ -1095,7 +1126,7 @@ export default function TemplateManager({
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', marginBottom: '10px', textAlign: 'center' }}>
-                  📄 <b>Umo Editor Physical Paper Sheet:</b> Klik/blok kata mana saja untuk mendeteksi font, ukuran & lebar otomatis!
+                  📄 <b>Umo Editor Physical Paper Sheet:</b> Klik/blok kata mana saja untuk mendeteksi font, ukuran, lebar pt & tinggi pt secara otomatis!
                 </div>
 
                 {/* Physical Document Paper */}
