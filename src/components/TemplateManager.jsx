@@ -18,10 +18,13 @@ export default function TemplateManager({
   const [editorActive, setEditorActive] = useState(false);
   const editorCanvasRef = useRef(null);
 
+  // Persistent Selection Range Memory Ref to Prevent Selection Loss When Clicking Input Boxes
+  const savedSelectionRangeRef = useRef(null);
+
   // Umo Editor Ribbon Menu Tab State: 'home', 'insert', 'layout'
   const [umoRibbonTab, setUmoRibbonTab] = useState('home');
   
-  // Custom Editable Text Width (pt) & Text Height (pt) instead of percentages
+  // Custom Editable Text Width (pt) & Text Height (pt)
   const [textWidthPt, setTextWidthPt] = useState('12.5');
   const [textHeightPt, setTextHeightPt] = useState('12.5');
 
@@ -68,6 +71,30 @@ export default function TemplateManager({
       return [...newStack, html];
     });
     setHistoryIndex(prev => prev + 1);
+  };
+
+  // Save current active selection range in memory before focus changes
+  const saveCurrentSelectionRange = () => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+      const range = selection.getRangeAt(0);
+      if (editorCanvasRef.current && editorCanvasRef.current.contains(range.commonAncestorContainer)) {
+        savedSelectionRangeRef.current = range.cloneRange();
+      }
+    }
+  };
+
+  // Restore saved selection range if input box steals focus
+  const restoreSavedSelectionRange = () => {
+    if (!savedSelectionRangeRef.current) return false;
+    try {
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(savedSelectionRangeRef.current);
+      return true;
+    } catch (err) {
+      return false;
+    }
   };
 
   // Perform Undo (Ctrl+Z)
@@ -182,6 +209,8 @@ export default function TemplateManager({
 
   // Live Auto-Detect Styles Under Cursor or Highlighted Selection (In Pt Units)
   const updateActiveToolbarStateFromSelection = () => {
+    saveCurrentSelectionRange();
+
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
@@ -275,11 +304,20 @@ export default function TemplateManager({
     setShowBubbleMenu(false);
   };
 
-  // Apply Inline Selection Format in Pt Units
+  // Apply Inline Selection Format in Pt Units with Auto Selection Restoration
   const applyInlineSelectionStyle = (styleObj) => {
     if (!editorCanvasRef.current) return;
 
-    const selection = window.getSelection();
+    let selection = window.getSelection();
+    
+    // Auto-restore saved selection range if input box took focus!
+    if (!selection || !selection.rangeCount || selection.isCollapsed) {
+      const restored = restoreSavedSelectionRange();
+      if (restored) {
+        selection = window.getSelection();
+      }
+    }
+
     if (!selection || !selection.rangeCount || selection.isCollapsed) {
       setEditorNotice('💡 Petunjuk: Blok/sorot teks terlebih dulu untuk mengubah font/ukuran/lebar!');
       setTimeout(() => setEditorNotice(''), 4000);
@@ -312,7 +350,6 @@ export default function TemplateManager({
     const numTargetWidthPt = parseFloat(targetWidthPtVal);
     if (isNaN(numTargetWidthPt) || numTargetWidthPt <= 0) return;
 
-    const selection = window.getSelection();
     let currentBasePt = parseFloat(activeFontSize) || 12.5;
 
     // Calculate scale factor: targetWidthPt / currentBasePt
@@ -602,7 +639,7 @@ export default function TemplateManager({
           </div>
         </>
       ) : (
-        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH EXACT PT-BASED WIDTH & HEIGHT AUTO-DETECTION */
+        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH PERSISTENT SELECTION MEMORY */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Top Control Bar */}
           <div className="card" style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -682,10 +719,10 @@ export default function TemplateManager({
                   <Italic size={12} />
                 </button>
 
-                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => applyInlineSelectionStyle({ fontSize: '14px' })}>
+                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => applyInlineSelectionStyle({ fontSize: '14pt' })}>
                   14pt
                 </button>
-                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => applyInlineSelectionStyle({ fontSize: '16px' })}>
+                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => applyInlineSelectionStyle({ fontSize: '16pt' })}>
                   16pt
                 </button>
 
@@ -852,7 +889,7 @@ export default function TemplateManager({
                       </div>
                     </div>
 
-                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR LEBAR TEKS (pt) */}
+                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR LEBAR TEKS (pt) WITH SELECTION RANGE PRESERVATION */}
                     <div className="form-group" style={{ margin: 0, width: '150px' }}>
                       <label className="form-label" style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)' }}>
                         <MoveHorizontal size={11} /> Lebar Teks (pt)
@@ -867,6 +904,7 @@ export default function TemplateManager({
                           style={{ padding: '4px 6px', fontSize: '0.8rem', width: '70px', borderColor: 'var(--accent-cyan)' }}
                           value={textWidthPt}
                           onChange={e => setTextWidthPt(e.target.value)}
+                          onFocus={saveCurrentSelectionRange}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -879,6 +917,7 @@ export default function TemplateManager({
                           type="button"
                           className="pill-btn"
                           style={{ padding: '4px 6px', fontSize: '0.75rem', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}
+                          onMouseDown={saveCurrentSelectionRange}
                           onClick={() => applyCustomWidthPt(textWidthPt)}
                         >
                           Ubah
@@ -886,7 +925,7 @@ export default function TemplateManager({
                       </div>
                     </div>
 
-                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR TINGGI TEKS (pt) */}
+                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR TINGGI TEKS (pt) WITH SELECTION RANGE PRESERVATION */}
                     <div className="form-group" style={{ margin: 0, width: '150px' }}>
                       <label className="form-label" style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)' }}>
                         <MoveVertical size={11} /> Tinggi Teks (pt)
@@ -901,6 +940,7 @@ export default function TemplateManager({
                           style={{ padding: '4px 6px', fontSize: '0.8rem', width: '70px', borderColor: 'var(--accent-emerald)' }}
                           value={textHeightPt}
                           onChange={e => setTextHeightPt(e.target.value)}
+                          onFocus={saveCurrentSelectionRange}
                           onKeyDown={e => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
@@ -913,6 +953,7 @@ export default function TemplateManager({
                           type="button"
                           className="pill-btn"
                           style={{ padding: '4px 6px', fontSize: '0.75rem', borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' }}
+                          onMouseDown={saveCurrentSelectionRange}
                           onClick={() => applyCustomHeightPt(textHeightPt)}
                         >
                           Ubah
@@ -1126,7 +1167,7 @@ export default function TemplateManager({
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', marginBottom: '10px', textAlign: 'center' }}>
-                  📄 <b>Umo Editor Physical Paper Sheet:</b> Klik/blok kata mana saja untuk mendeteksi font, ukuran, lebar pt & tinggi pt secara otomatis!
+                  📄 <b>Umo Editor Physical Paper Sheet:</b> Blok kata & ketik angka pt di Lebar/Tinggi Teks lalu tekan Ubah!
                 </div>
 
                 {/* Physical Document Paper */}
