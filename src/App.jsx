@@ -19,7 +19,7 @@ export default function App() {
   // State Management
   const [fuels, setFuels] = useState(INITIAL_FUELS);
   const [templates, setTemplates] = useState(DEFAULT_TEMPLATES);
-  const [selectedTemplateId, setSelectedTemplateId] = useState('pertamina-sukaraja');
+  const [selectedTemplateId, setSelectedTemplateId] = useState('pertamina-sukaraja-real');
   const [history, setHistory] = useState([]);
   
   // Font & Logo Size Settings State
@@ -32,49 +32,49 @@ export default function App() {
     textAlign: 'left'
   });
 
-  // Dynamic Template Pattern with Tags (Word / Notepad Style Template)
+  // Dynamic Template Pattern with Tags matching photo
   const [templatePattern, setTemplatePattern] = useState(`{NO_SPBU}
 {NAMA_SPBU}
 {ALAMAT}
 Shift: {SHIFT}          No. Trans: {NO_TRANS}
 Waktu: {WAKTU}
-
+-----------------------------------------
 Pulau/Pompa: {POMPA}
 Nama Produk: {NAMA_PRODUK}
 Harga/Liter: Rp. {HARGA_LITER}
 Volume     : (L) {VOLUME}
 Total Harga: Rp. {TOTAL_HARGA}
 Operator   : {OPERATOR}
-
+-----------------------------------------
 {METODE_BAYAR}                                {TOTAL_HARGA}`);
 
   // Printer state
   const [printers, setPrinters] = useState([]);
   const [selectedPrinter, setSelectedPrinter] = useState('');
   const [printerSettings, setPrinterSettings] = useState({
-    paperWidth: 58,
+    paperWidth: 58, // 5.7 cm - 5.8 cm paper width
     fontSize: 12,
     silentPrint: true
   });
   const [isPrinting, setIsPrinting] = useState(false);
 
-  // Default Form Data for Print Variables
+  // Default Form Data matching user photo 100%
   const [formData, setFormData] = useState({
     spbuName: 'SPBU RY SUKARAJA JENGGALA',
     spbuNo: '3446125',
     spbuAddress: 'JL. RAYA SUKARAJA DS. JENGGALA',
     spbuPhone: '',
-    shift: '2',
-    transactionNo: '6101940',
-    dateTime: '21/07/2026 15:40:41',
+    shift: '1',
+    transactionNo: '6137760',
+    dateTime: '04/08/2026 07:52:30',
     fuelId: 'fuel_7',
     fuelName: 'PERTAMINA_DEX',
     pricePerLiter: 21150,
-    totalAmount: 300000,
-    paidAmount: 300000,
-    liter: 14.18,
-    pumpNo: '2',
-    operatorName: 'AGUS',
+    totalAmount: 500000,
+    paidAmount: 500000,
+    liter: 23.64,
+    pumpNo: '1',
+    operatorName: 'AJIS',
     platNo: '',
     paymentMethod: 'CASH',
     customLogoUrl: ''
@@ -116,7 +116,6 @@ Operator   : {OPERATOR}
       } catch (err) {
         console.error('Error loading database data:', err);
       } finally {
-        // Set flag true after initial load completes to enable auto-saving
         isLoadedRef.current = true;
       }
     }
@@ -198,7 +197,9 @@ Operator   : {OPERATOR}
   }, [printerSettings]);
 
   // Active Template Object
-  const currentTemplate = templates.find(t => t.id === selectedTemplateId) || templates[0];
+  const currentTemplate = (templates && templates.length > 0) 
+    ? (templates.find(t => t.id === selectedTemplateId) || templates[0]) 
+    : DEFAULT_TEMPLATES[0];
 
   // Print Receipt Handler
   const handlePrintReceipt = async (htmlContent) => {
@@ -270,7 +271,7 @@ Operator   : {OPERATOR}
       spbuNo: historyItem.spbuNo,
       spbuAddress: historyItem.spbuAddress,
       spbuPhone: historyItem.spbuPhone,
-      shift: historyItem.shift || '2',
+      shift: historyItem.shift || '1',
       transactionNo: historyItem.transactionNo,
       dateTime: historyItem.dateTime,
       fuelId: historyItem.fuelId,
