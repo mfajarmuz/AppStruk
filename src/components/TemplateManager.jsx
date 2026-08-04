@@ -25,6 +25,14 @@ export default function TemplateManager({
   const [customScaleX, setCustomScaleX] = useState(100);
   const [customScaleY, setCustomScaleY] = useState(100);
 
+  // Live Detected Formatting State Under Cursor / Selection
+  const [activeFontFamily, setActiveFontFamily] = useState('');
+  const [activeFontSize, setActiveFontSize] = useState('');
+  const [activeBold, setActiveBold] = useState(false);
+  const [activeItalic, setActiveItalic] = useState(false);
+  const [activeUnderline, setActiveUnderline] = useState(false);
+  const [activeAlignment, setActiveAlignment] = useState('left');
+
   // Non-blocking notice state (removes popup modal alert)
   const [editorNotice, setEditorNotice] = useState('');
 
@@ -172,8 +180,80 @@ export default function TemplateManager({
     }
   };
 
-  // Handle Selection Bubble Formatting Menu
+  // Live Auto-Detect Styles Under Cursor or Highlighted Selection (Like MS Word)
+  const updateActiveToolbarStateFromSelection = () => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    let node = selection.anchorNode;
+    if (!node) return;
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      node = node.parentNode;
+    }
+
+    if (!node || !editorCanvasRef.current || !editorCanvasRef.current.contains(node)) return;
+
+    const computedStyle = window.getComputedStyle(node);
+
+    // 1. Detect Font Family
+    const rawFont = (computedStyle.fontFamily || '').toLowerCase();
+    if (rawFont.includes('letter gothic')) {
+      setActiveFontFamily("'Letter Gothic', 'Letter Gothic Std', 'Courier Prime', monospace");
+    } else if (rawFont.includes('courier new') || rawFont.includes('courier')) {
+      setActiveFontFamily("'Courier New', Courier, monospace");
+    } else if (rawFont.includes('consolas')) {
+      setActiveFontFamily("'Consolas', 'Courier New', monospace");
+    } else if (rawFont.includes('jetbrains mono')) {
+      setActiveFontFamily("'JetBrains Mono', monospace");
+    } else if (rawFont.includes('roboto mono')) {
+      setActiveFontFamily("'Roboto Mono', monospace");
+    } else if (rawFont.includes('arial')) {
+      setActiveFontFamily("'Arial', sans-serif");
+    } else if (rawFont.includes('times')) {
+      setActiveFontFamily("'Times New Roman', serif");
+    } else if (rawFont.includes('trebuchet')) {
+      setActiveFontFamily("'Trebuchet MS', sans-serif");
+    } else if (rawFont.includes('impact')) {
+      setActiveFontFamily("'Impact', sans-serif");
+    }
+
+    // 2. Detect Font Size
+    const pxSize = parseFloat(computedStyle.fontSize);
+    if (!isNaN(pxSize)) {
+      setActiveFontSize(`${Math.round(pxSize)}`);
+    }
+
+    // 3. Detect Bold / Italic / Underline
+    const weight = computedStyle.fontWeight;
+    setActiveBold(weight === 'bold' || weight === '700' || parseInt(weight) >= 600);
+    setActiveItalic(computedStyle.fontStyle === 'italic');
+    setActiveUnderline((computedStyle.textDecorationLine || computedStyle.textDecoration || '').includes('underline'));
+
+    // 4. Detect Alignment
+    const align = computedStyle.textAlign || 'left';
+    setActiveAlignment(align);
+
+    // 5. Detect Transform ScaleX / ScaleY %
+    const transform = computedStyle.transform;
+    if (transform && transform !== 'none') {
+      const match = transform.match(/matrix\(([^)]+)\)/);
+      if (match) {
+        const parts = match[1].split(',').map(p => parseFloat(p.trim()));
+        if (parts.length >= 4) {
+          const scaleX = Math.round(parts[0] * 100);
+          const scaleY = Math.round(parts[3] * 100);
+          if (scaleX > 0) setCustomScaleX(scaleX);
+          if (scaleY > 0) setCustomScaleY(scaleY);
+        }
+      }
+    }
+  };
+
+  // Handle Selection Bubble Formatting Menu & Live Style Detection
   const handleCanvasSelection = () => {
+    updateActiveToolbarStateFromSelection();
+
     const selection = window.getSelection();
     if (selection && !selection.isCollapsed && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
@@ -190,7 +270,7 @@ export default function TemplateManager({
     setShowBubbleMenu(false);
   };
 
-  // Umo Editor Apply Selective Inline Format ONLY to Currently Highlighted / Selected Text (WITHOUT BLOCKING POPUP ALERTS)
+  // Umo Editor Apply Selective Inline Format ONLY to Currently Highlighted / Selected Text
   const applyInlineSelectionStyle = (styleObj) => {
     if (!editorCanvasRef.current) return;
 
@@ -218,6 +298,7 @@ export default function TemplateManager({
     range.insertNode(span);
 
     handleCanvasInput();
+    updateActiveToolbarStateFromSelection();
     editorCanvasRef.current.focus();
   };
 
@@ -242,12 +323,14 @@ export default function TemplateManager({
     }
 
     handleCanvasInput();
+    updateActiveToolbarStateFromSelection();
     if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
   const executeCommand = (cmd, val = null) => {
     document.execCommand(cmd, false, val);
     handleCanvasInput();
+    updateActiveToolbarStateFromSelection();
     if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
@@ -257,6 +340,7 @@ export default function TemplateManager({
       editorCanvasRef.current.focus();
       document.execCommand('insertHTML', false, htmlStr);
       handleCanvasInput();
+      updateActiveToolbarStateFromSelection();
     }
   };
 
@@ -481,7 +565,7 @@ export default function TemplateManager({
           </div>
         </>
       ) : (
-        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH NON-BLOCKING TOOLBAR FEEDBACK */
+        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH LIVE AUTO-DETECT TOOLBAR STATE */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Top Control Bar */}
           <div className="card" style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -554,10 +638,10 @@ export default function TemplateManager({
                   animation: 'fadeIn 0.15s ease'
                 }}
               >
-                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => executeCommand('bold')}>
+                <button type="button" className={`pill-btn ${activeBold ? 'active' : ''}`} style={{ padding: '4px 6px' }} onClick={() => executeCommand('bold')}>
                   <Bold size={12} />
                 </button>
-                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => executeCommand('italic')}>
+                <button type="button" className={`pill-btn ${activeItalic ? 'active' : ''}`} style={{ padding: '4px 6px' }} onClick={() => executeCommand('italic')}>
                   <Italic size={12} />
                 </button>
 
@@ -568,13 +652,13 @@ export default function TemplateManager({
                   16pt
                 </button>
 
-                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => executeCommand('justifyLeft')}>
+                <button type="button" className={`pill-btn ${activeAlignment === 'left' ? 'active' : ''}`} style={{ padding: '4px 6px' }} onClick={() => executeCommand('justifyLeft')}>
                   <AlignLeft size={12} />
                 </button>
-                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => executeCommand('justifyCenter')}>
+                <button type="button" className={`pill-btn ${activeAlignment === 'center' ? 'active' : ''}`} style={{ padding: '4px 6px' }} onClick={() => executeCommand('justifyCenter')}>
                   <AlignCenter size={12} />
                 </button>
-                <button type="button" className="pill-btn" style={{ padding: '4px 6px' }} onClick={() => executeCommand('justifyRight')}>
+                <button type="button" className={`pill-btn ${activeAlignment === 'right' ? 'active' : ''}`} style={{ padding: '4px 6px' }} onClick={() => executeCommand('justifyRight')}>
                   <AlignRight size={12} />
                 </button>
               </div>
@@ -670,14 +754,14 @@ export default function TemplateManager({
                       </div>
                     </div>
 
-                    {/* Font Family Selection Dropdown */}
+                    {/* Font Family Selection Dropdown with Live Auto-Detection */}
                     <div className="form-group" style={{ margin: 0, width: '140px' }}>
                       <label className="form-label" style={{ fontSize: '0.7rem' }}>Font Teks</label>
                       <select
                         className="form-select"
-                        style={{ padding: '4px 8px', fontSize: '0.8rem' }}
+                        style={{ padding: '4px 8px', fontSize: '0.8rem', fontWeight: activeFontFamily ? 700 : 400 }}
                         onChange={e => applyInlineSelectionStyle({ fontFamily: e.target.value })}
-                        defaultValue=""
+                        value={activeFontFamily}
                       >
                         <option value="" disabled>-- Font --</option>
                         <option value="'Courier New', Courier, monospace">Courier New</option>
@@ -691,20 +775,20 @@ export default function TemplateManager({
                       </select>
                     </div>
 
-                    {/* Font Size */}
+                    {/* Font Size with Live Auto-Detection */}
                     <div className="form-group" style={{ margin: 0, width: '100px' }}>
                       <label className="form-label" style={{ fontSize: '0.7rem' }}>Ukuran Font</label>
                       <select
                         className="form-select"
-                        style={{ padding: '4px 8px', fontSize: '0.8rem' }}
+                        style={{ padding: '4px 8px', fontSize: '0.8rem', fontWeight: activeFontSize ? 700 : 400 }}
                         onChange={e => applyInlineSelectionStyle({ fontSize: `${e.target.value}px` })}
-                        defaultValue=""
+                        value={activeFontSize}
                       >
                         <option value="" disabled>-- Size --</option>
                         <option value="10">10 pt</option>
                         <option value="11">11 pt</option>
                         <option value="12">12 pt</option>
-                        <option value="12.5">12.5 pt</option>
+                        <option value="13">13 pt</option>
                         <option value="14">14 pt</option>
                         <option value="16">16 pt</option>
                         <option value="18">18 pt</option>
@@ -712,17 +796,17 @@ export default function TemplateManager({
                       </select>
                     </div>
 
-                    {/* Styles B / I / U / S */}
+                    {/* Styles B / I / U / S with Live Highlighted State Indicator */}
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.7rem' }}>Styles</label>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button type="button" className="pill-btn" style={{ padding: '4px 8px' }} onClick={() => executeCommand('bold')} title="Bold">
+                        <button type="button" className={`pill-btn ${activeBold ? 'active' : ''}`} style={{ padding: '4px 8px' }} onClick={() => executeCommand('bold')} title="Bold">
                           <Bold size={13} />
                         </button>
-                        <button type="button" className="pill-btn" style={{ padding: '4px 8px' }} onClick={() => executeCommand('italic')} title="Italic">
+                        <button type="button" className={`pill-btn ${activeItalic ? 'active' : ''}`} style={{ padding: '4px 8px' }} onClick={() => executeCommand('italic')} title="Italic">
                           <Italic size={13} />
                         </button>
-                        <button type="button" className="pill-btn" style={{ padding: '4px 8px' }} onClick={() => executeCommand('underline')} title="Underline">
+                        <button type="button" className={`pill-btn ${activeUnderline ? 'active' : ''}`} style={{ padding: '4px 8px' }} onClick={() => executeCommand('underline')} title="Underline">
                           <Underline size={13} />
                         </button>
                         <button type="button" className="pill-btn" style={{ padding: '4px 8px' }} onClick={() => executeCommand('strikeThrough')} title="Strikethrough">
@@ -822,20 +906,20 @@ export default function TemplateManager({
                       </select>
                     </div>
 
-                    {/* Text Alignment */}
+                    {/* Text Alignment with Live Highlighted Active State */}
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.7rem' }}>Rataan Teks</label>
                       <div style={{ display: 'flex', gap: '4px' }}>
-                        <button type="button" className="pill-btn" onClick={() => executeCommand('justifyLeft')} title="Rata Kiri">
+                        <button type="button" className={`pill-btn ${activeAlignment === 'left' ? 'active' : ''}`} onClick={() => executeCommand('justifyLeft')} title="Rata Kiri">
                           <AlignLeft size={14} />
                         </button>
-                        <button type="button" className="pill-btn" onClick={() => executeCommand('justifyCenter')} title="Rata Tengah">
+                        <button type="button" className={`pill-btn ${activeAlignment === 'center' ? 'active' : ''}`} onClick={() => executeCommand('justifyCenter')} title="Rata Tengah">
                           <AlignCenter size={14} />
                         </button>
-                        <button type="button" className="pill-btn" onClick={() => executeCommand('justifyRight')} title="Rata Kanan">
+                        <button type="button" className={`pill-btn ${activeAlignment === 'right' ? 'active' : ''}`} onClick={() => executeCommand('justifyRight')} title="Rata Kanan">
                           <AlignRight size={14} />
                         </button>
-                        <button type="button" className="pill-btn" onClick={() => executeCommand('justifyFull')} title="Justify">
+                        <button type="button" className={`pill-btn ${activeAlignment === 'justify' ? 'active' : ''}`} onClick={() => executeCommand('justifyFull')} title="Justify">
                           <AlignJustify size={14} />
                         </button>
                       </div>
@@ -1011,7 +1095,7 @@ export default function TemplateManager({
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', marginBottom: '10px', textAlign: 'center' }}>
-                  📄 <b>Umo Editor Physical Paper Sheet:</b> Ketik angka % di Lebar/Tinggi Teks & tekan Ubah!
+                  📄 <b>Umo Editor Physical Paper Sheet:</b> Klik/blok kata mana saja untuk mendeteksi font, ukuran & lebar otomatis!
                 </div>
 
                 {/* Physical Document Paper */}
@@ -1036,6 +1120,7 @@ export default function TemplateManager({
                     onInput={handleCanvasInput}
                     onMouseUp={handleCanvasSelection}
                     onKeyUp={handleCanvasSelection}
+                    onClick={updateActiveToolbarStateFromSelection}
                     style={{
                       fontFamily: "'Courier New', Courier, monospace",
                       fontSize: '12.5px',
