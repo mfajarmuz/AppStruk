@@ -4,7 +4,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, Underline, Strikethrough,
   ZoomIn, ZoomOut, Upload, ArrowLeft, MoveVertical, MoveHorizontal, Table, Minus, List,
   ListOrdered, Palette, Sparkles, Scissors, CornerUpLeft, CornerUpRight, Printer, Save,
-  Maximize2, Minimize2, FileCode, CheckSquare, Layers, Undo2, Redo2
+  Maximize2, Minimize2, FileCode, CheckSquare, Layers, Undo2, Redo2, Info
 } from 'lucide-react';
 import { DEFAULT_TEMPLATES } from '../data/defaultTemplates';
 import { PertaminaLogoExact, parseReceiptTemplate } from './ReceiptPreview';
@@ -24,6 +24,9 @@ export default function TemplateManager({
   // Custom Editable Percentage Text Width (ScaleX) & Height (ScaleY)
   const [customScaleX, setCustomScaleX] = useState(100);
   const [customScaleY, setCustomScaleY] = useState(100);
+
+  // Non-blocking notice state (removes popup modal alert)
+  const [editorNotice, setEditorNotice] = useState('');
 
   // Current Template Being Edited
   const [editingTemplate, setEditingTemplate] = useState({
@@ -187,17 +190,25 @@ export default function TemplateManager({
     setShowBubbleMenu(false);
   };
 
-  // Umo Editor Apply Selective Inline Format ONLY to Currently Highlighted / Selected Text
+  // Umo Editor Apply Selective Inline Format ONLY to Currently Highlighted / Selected Text (WITHOUT BLOCKING POPUP ALERTS)
   const applyInlineSelectionStyle = (styleObj) => {
+    if (!editorCanvasRef.current) return;
+
     const selection = window.getSelection();
-    if (!selection.rangeCount || selection.isCollapsed) {
-      alert('Silakan blok/seleksi teks yang ingin diubah terlebih dulu!');
+    if (!selection || !selection.rangeCount || selection.isCollapsed) {
+      setEditorNotice('💡 Petunjuk: Blok/sorot teks terlebih dulu untuk mengubah font/ukuran/lebar!');
+      setTimeout(() => setEditorNotice(''), 4000);
+      editorCanvasRef.current.focus();
       return;
     }
 
+    setEditorNotice('');
     const range = selection.getRangeAt(0);
     const selectedText = range.toString();
-    if (!selectedText) return;
+    if (!selectedText) {
+      editorCanvasRef.current.focus();
+      return;
+    }
 
     const span = document.createElement('span');
     Object.assign(span.style, styleObj);
@@ -207,6 +218,7 @@ export default function TemplateManager({
     range.insertNode(span);
 
     handleCanvasInput();
+    editorCanvasRef.current.focus();
   };
 
   // Umo Editor Apply Selective Line Spacing or Alignment to Selected Paragraph / Line
@@ -230,11 +242,13 @@ export default function TemplateManager({
     }
 
     handleCanvasInput();
+    if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
   const executeCommand = (cmd, val = null) => {
     document.execCommand(cmd, false, val);
     handleCanvasInput();
+    if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
   // Insert HTML at cursor
@@ -467,7 +481,7 @@ export default function TemplateManager({
           </div>
         </>
       ) : (
-        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH CUSTOM EDITABLE PERCENTAGE TEXT WIDTH & HEIGHT */
+        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH NON-BLOCKING TOOLBAR FEEDBACK */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Top Control Bar */}
           <div className="card" style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -631,6 +645,13 @@ export default function TemplateManager({
                   Sisipkan (Nodes & Logo Spacing)
                 </button>
               </div>
+
+              {/* NON-BLOCKING EDITOR NOTICE BANNER */}
+              {editorNotice && (
+                <div style={{ background: '#0284c7', color: '#ffffff', padding: '6px 16px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
+                  <Info size={14} /> <span>{editorNotice}</span>
+                </div>
+              )}
 
               {/* Umo Editor Ribbon Toolbar Content Area */}
               <div style={{ background: '#0f172a', padding: '14px 16px', borderBottom: '1px solid var(--border-color)' }}>
