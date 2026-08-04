@@ -21,6 +21,10 @@ export default function TemplateManager({
   // Umo Editor Ribbon Menu Tab State: 'home', 'insert', 'layout'
   const [umoRibbonTab, setUmoRibbonTab] = useState('home');
   
+  // Custom Editable Percentage Text Width (ScaleX) & Height (ScaleY)
+  const [customScaleX, setCustomScaleX] = useState(100);
+  const [customScaleY, setCustomScaleY] = useState(100);
+
   // Current Template Being Edited
   const [editingTemplate, setEditingTemplate] = useState({
     id: '',
@@ -463,7 +467,7 @@ export default function TemplateManager({
           </div>
         </>
       ) : (
-        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE */
+        /* VIEW 2: UMO EDITOR ADAPTED INTERFACE WITH CUSTOM EDITABLE PERCENTAGE TEXT WIDTH & HEIGHT */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Top Control Bar */}
           <div className="card" style={{ padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -706,41 +710,78 @@ export default function TemplateManager({
                       </div>
                     </div>
 
-                    {/* Scale Y & Scale X */}
-                    <div className="form-group" style={{ margin: 0, width: '110px' }}>
-                      <label className="form-label" style={{ fontSize: '0.7rem' }}>
-                        <MoveVertical size={11} /> Tinggi Teks
+                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR LEBAR TEKS (%) */}
+                    <div className="form-group" style={{ margin: 0, width: '150px' }}>
+                      <label className="form-label" style={{ fontSize: '0.7rem', color: 'var(--accent-cyan)' }}>
+                        <MoveHorizontal size={11} /> Lebar Teks (%)
                       </label>
-                      <select
-                        className="form-select"
-                        style={{ padding: '4px 8px', fontSize: '0.8rem' }}
-                        onChange={e => applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleY(${e.target.value})` })}
-                        defaultValue=""
-                      >
-                        <option value="" disabled>-- Tinggi --</option>
-                        <option value="1">100% (Normal)</option>
-                        <option value="1.25">125% (Tinggi)</option>
-                        <option value="1.5">150% (Double Height)</option>
-                        <option value="2">200% (2x Tinggi)</option>
-                      </select>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          min="50"
+                          max="400"
+                          className="form-input"
+                          style={{ padding: '4px 6px', fontSize: '0.8rem', width: '70px', borderColor: 'var(--accent-cyan)' }}
+                          value={customScaleX}
+                          onChange={e => setCustomScaleX(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = parseFloat(customScaleX) || 100;
+                              applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleX(${val / 100})`, letterSpacing: '1px' });
+                            }
+                          }}
+                          placeholder="100"
+                        />
+                        <button
+                          type="button"
+                          className="pill-btn"
+                          style={{ padding: '4px 6px', fontSize: '0.75rem', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}
+                          onClick={() => {
+                            const val = parseFloat(customScaleX) || 100;
+                            applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleX(${val / 100})`, letterSpacing: '1px' });
+                          }}
+                        >
+                          Ubah
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="form-group" style={{ margin: 0, width: '110px' }}>
-                      <label className="form-label" style={{ fontSize: '0.7rem' }}>
-                        <MoveHorizontal size={11} /> Lebar Teks
+                    {/* CUSTOM EDITABLE NUMERIC INPUT FOR TINGGI TEKS (%) */}
+                    <div className="form-group" style={{ margin: 0, width: '150px' }}>
+                      <label className="form-label" style={{ fontSize: '0.7rem', color: 'var(--accent-emerald)' }}>
+                        <MoveVertical size={11} /> Tinggi Teks (%)
                       </label>
-                      <select
-                        className="form-select"
-                        style={{ padding: '4px 8px', fontSize: '0.8rem' }}
-                        onChange={e => applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleX(${e.target.value})`, letterSpacing: '1px' })}
-                        defaultValue=""
-                      >
-                        <option value="" disabled>-- Lebar --</option>
-                        <option value="1">100% (Normal)</option>
-                        <option value="1.2">120% (Lebar)</option>
-                        <option value="1.5">150% (Double Width)</option>
-                        <option value="2">200% (2x Lebar)</option>
-                      </select>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          min="50"
+                          max="400"
+                          className="form-input"
+                          style={{ padding: '4px 6px', fontSize: '0.8rem', width: '70px', borderColor: 'var(--accent-emerald)' }}
+                          value={customScaleY}
+                          onChange={e => setCustomScaleY(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = parseFloat(customScaleY) || 100;
+                              applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleY(${val / 100})` });
+                            }
+                          }}
+                          placeholder="100"
+                        />
+                        <button
+                          type="button"
+                          className="pill-btn"
+                          style={{ padding: '4px 6px', fontSize: '0.75rem', borderColor: 'var(--accent-emerald)', color: 'var(--accent-emerald)' }}
+                          onClick={() => {
+                            const val = parseFloat(customScaleY) || 100;
+                            applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleY(${val / 100})` });
+                          }}
+                        >
+                          Ubah
+                        </button>
+                      </div>
                     </div>
 
                     {/* Line Spacing */}
@@ -949,7 +990,7 @@ export default function TemplateManager({
                 }}
               >
                 <div style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', marginBottom: '10px', textAlign: 'center' }}>
-                  📄 <b>Umo Editor Physical Paper Sheet:</b> Blok & ketik teks seperti biasa!
+                  📄 <b>Umo Editor Physical Paper Sheet:</b> Ketik angka % di Lebar/Tinggi Teks & tekan Ubah!
                 </div>
 
                 {/* Physical Document Paper */}
