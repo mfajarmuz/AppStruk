@@ -287,12 +287,13 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   };
 
   const restoreSavedSelectionRange = () => {
-    if (!savedSelectionRangeRef.current) return false;
+    if (!savedSelectionRangeRef.current || !editorCanvasRef.current) return false;
     try {
+      editorCanvasRef.current.focus();
       const selection = window.getSelection();
       selection.removeAllRanges();
-      selection.addRange(savedSelectionRangeRef.current);
-      return true;
+      selection.addRange(savedSelectionRangeRef.current.cloneRange());
+      return !selection.isCollapsed;
     } catch { return false; }
   };
 
@@ -613,51 +614,81 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const applyInlineSelectionStyle = (styleObj) => {
     if (!editorCanvasRef.current) return;
 
-    // Always attempt to restore saved non-collapsed selection range first!
+    // Must focus canvas first so selection range can attach cleanly
+    editorCanvasRef.current.focus();
     restoreSavedSelectionRange();
 
     let selection = window.getSelection();
     if (!selection || !selection.rangeCount || selection.isCollapsed) {
-      showNotice('💡 Blok/sorot teks terlebih dulu untuk mengubah format!');
-      editorCanvasRef.current.focus();
-      return;
+      // Fallback: If canvas has text, select all contents and format!
+      if (editorCanvasRef.current.textContent.trim().length > 0) {
+        const fullRange = document.createRange();
+        fullRange.selectNodeContents(editorCanvasRef.current);
+        selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(fullRange);
+      } else {
+        showNotice('💡 Ketik atau sorot teks terlebih dulu untuk mengubah format!');
+        return;
+      }
     }
+
     setEditorNotice('');
     const range = selection.getRangeAt(0);
     const text = range.toString();
     if (!text) return;
 
-    let parentSpan = selection.anchorNode;
-    if (parentSpan && parentSpan.nodeType === Node.TEXT_NODE) parentSpan = parentSpan.parentNode;
+    // Check if entire canvas or major block is selected
+    const isFullCanvasSelected = range.toString().replace(/\s/g, '').length >= editorCanvasRef.current.textContent.replace(/\s/g, '').length;
 
-    // Single span exact selection
-    if (parentSpan && parentSpan.nodeName === 'SPAN' && parentSpan !== editorCanvasRef.current && parentSpan.textContent === text) {
-      Object.assign(parentSpan.style, styleObj);
-    } else {
-      // Extract contents to preserve all child nodes (DIVs, BRs, SPANs, TRs, etc.)
-      const fragment = range.extractContents();
-
-      const applyStyleToNode = (node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          if (['DIV', 'P', 'SPAN', 'TD', 'TH'].includes(node.nodeName)) {
-            Object.assign(node.style, styleObj);
-          }
-          node.childNodes.forEach(applyStyleToNode);
-        } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-          const parent = node.parentNode;
-          if (parent && parent.nodeName === 'SPAN') {
-            Object.assign(parent.style, styleObj);
-          } else if (parent && parent.nodeType === Node.ELEMENT_NODE) {
-            const span = document.createElement('span');
-            Object.assign(span.style, styleObj);
-            span.textContent = node.textContent;
-            parent.replaceChild(span, node);
-          }
+    if (isFullCanvasSelected) {
+      // Apply styleObj to ALL elements inside canvas directly
+      editorCanvasRef.current.querySelectorAll('div, span, p, td, th').forEach(el => {
+        Object.assign(el.style, styleObj);
+      });
+      // Also apply style to any text nodes directly inside divs
+      const walk = document.createTreeWalker(editorCanvasRef.current, NodeFilter.SHOW_TEXT, null, false);
+      let textNode;
+      while ((textNode = walk.nextNode())) {
+        if (textNode.textContent.trim() && textNode.parentNode && textNode.parentNode.nodeName !== 'SPAN') {
+          const span = document.createElement('span');
+          Object.assign(span.style, styleObj);
+          span.textContent = textNode.textContent;
+          textNode.parentNode.replaceChild(span, textNode);
         }
-      };
+      }
+    } else {
+      // Single span exact selection
+      let parentSpan = selection.anchorNode;
+      if (parentSpan && parentSpan.nodeType === Node.TEXT_NODE) parentSpan = parentSpan.parentNode;
 
-      applyStyleToNode(fragment);
-      range.insertNode(fragment);
+      if (parentSpan && parentSpan.nodeName === 'SPAN' && parentSpan !== editorCanvasRef.current && parentSpan.textContent === text) {
+        Object.assign(parentSpan.style, styleObj);
+      } else {
+        const fragment = range.extractContents();
+
+        const applyStyleToNode = (node) => {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            if (['DIV', 'P', 'SPAN', 'TD', 'TH'].includes(node.nodeName)) {
+              Object.assign(node.style, styleObj);
+            }
+            node.childNodes.forEach(applyStyleToNode);
+          } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+            const parent = node.parentNode;
+            if (parent && parent.nodeName === 'SPAN') {
+              Object.assign(parent.style, styleObj);
+            } else if (parent && parent.nodeType === Node.ELEMENT_NODE) {
+              const span = document.createElement('span');
+              Object.assign(span.style, styleObj);
+              span.textContent = node.textContent;
+              parent.replaceChild(span, node);
+            }
+          }
+        };
+
+        applyStyleToNode(fragment);
+        range.insertNode(fragment);
+      }
     }
 
     handleCanvasInput();
