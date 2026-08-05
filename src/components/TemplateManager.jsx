@@ -850,14 +850,17 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const html = `<div style="margin:0;padding:0;">{NO_SPBU}</div><div style="margin:0;padding:0;">{NAMA_SPBU}</div><div style="margin:0;padding:0;">{ALAMAT}</div><div style="margin:0;padding:0;">Shift: {SHIFT}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;No. Trans: {NO_TRANS}</div><div style="margin:0;padding:0;">Waktu: {WAKTU}</div><div><br></div><div style="margin:0;padding:0;">Pulau/Pompa: {POMPA}</div><div style="margin:0;padding:0;">Nama Produk: {NAMA_PRODUK}</div><div style="margin:0;padding:0;">Harga/Liter: Rp. {HARGA_LITER}</div><div style="margin:0;padding:0;">Volume     : (L) {VOLUME}</div><div style="margin:0;padding:0;">Total Harga: Rp. {TOTAL_HARGA}</div><div style="margin:0;padding:0;">Operator   : {OPERATOR}</div><div><br></div><div style="margin:0;padding:0;">{METODE_BAYAR}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{TOTAL_HARGA}</div>`;
     setEditingTemplate({
       id: `custom_tpl_${Date.now()}`, name: 'Template Kustom Baru', description: 'Template buatan sendiri.',
-      badge: 'Custom', htmlContent: html, pattern: '', logoWidth: 160, logoMarginBottom: -4, customLogoUrl: ''
+      badge: 'Custom', htmlContent: html, pattern: '', logoWidth: 160, logoMarginBottom: -4, customLogoUrl: '', paperMarginMm: 0
     });
+    setPaperMarginMm(0);
     setEditorActive(true);
   };
 
   const handleEditTemplate = (tpl) => {
     const html = tpl.htmlContent || `<div>${(tpl.pattern || '').replace(/\n/g, '</div><div>')}</div>`;
-    setEditingTemplate({ ...tpl, htmlContent: html, pattern: tpl.pattern || '', logoWidth: tpl.logoWidth || 160, logoMarginBottom: tpl.logoMarginBottom !== undefined ? tpl.logoMarginBottom : -4, customLogoUrl: tpl.customLogoUrl || '' });
+    const margin = tpl.paperMarginMm !== undefined ? tpl.paperMarginMm : 0;
+    setEditingTemplate({ ...tpl, htmlContent: html, pattern: tpl.pattern || '', logoWidth: tpl.logoWidth || 160, logoMarginBottom: tpl.logoMarginBottom !== undefined ? tpl.logoMarginBottom : -4, customLogoUrl: tpl.customLogoUrl || '', paperMarginMm: margin });
+    setPaperMarginMm(margin);
     setEditorActive(true);
   };
 
@@ -868,13 +871,13 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     }
     const currentHtml = editorCanvasRef.current ? editorCanvasRef.current.innerHTML : editingTemplate.htmlContent;
     const currentPattern = editorCanvasRef.current ? editorCanvasRef.current.innerText : editingTemplate.pattern;
-    const saved = { ...editingTemplate, htmlContent: currentHtml, pattern: currentPattern };
+    const saved = { ...editingTemplate, htmlContent: currentHtml, pattern: currentPattern, paperMarginMm };
     setTemplates(prev => {
       const exists = prev.some(t => t.id === saved.id);
       return exists ? prev.map(t => t.id === saved.id ? saved : t) : [...prev, saved];
     });
     setIsSaved(true);
-    showNotice('✓ Template berhasil disimpan!');
+    showNotice('✓ Template & Margin berhasil disimpan!');
   };
 
   const handleDeleteTemplate = (id) => {
@@ -1178,6 +1181,29 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
                 <div className="umo-toolbar-divider" />
 
+                {/* Group 6.5: Paper Margin */}
+                <div className="umo-toolbar-group">
+                  <select className="umo-select" style={{ width: '72px', fontSize: '0.72rem' }} value={paperMarginMm}
+                    onMouseDown={() => saveCurrentSelectionRange()}
+                    onFocus={saveCurrentSelectionRange}
+                    onChange={e => {
+                      const val = parseInt(e.target.value);
+                      setPaperMarginMm(val);
+                      setEditingTemplate(prev => ({ ...prev, paperMarginMm: val }));
+                      setIsSaved(false);
+                    }} title="Margin Kertas Struk (mm)">
+                    <option value={0}>0mm (32ch)</option>
+                    <option value={1}>1mm (31ch)</option>
+                    <option value={2}>2mm (30ch)</option>
+                    <option value={3}>3mm (28ch)</option>
+                    <option value={4}>4mm (27ch)</option>
+                    <option value={5}>5mm (25ch)</option>
+                    <option value={6}>6mm (24ch)</option>
+                  </select>
+                </div>
+
+                <div className="umo-toolbar-divider" />
+
                 {/* Group 7: Insert Dropdown */}
                 <div className="umo-toolbar-group">
                   <button ref={insertBtnRef}
@@ -1355,6 +1381,39 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <input type="range" min="-20" max="40" step="2" value={editingTemplate.logoMarginBottom !== undefined ? editingTemplate.logoMarginBottom : -4}
                     onChange={e => setEditingTemplate(prev => ({ ...prev, logoMarginBottom: parseInt(e.target.value) }))}
                     style={{ width: '100%', accentColor: 'var(--accent-emerald)' }} />
+                </div>
+
+                {/* Margin Kertas Struk Control */}
+                <div className="form-group" style={{ marginBottom: '12px', background: 'rgba(15,23,42,0.5)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--accent-cyan)' }}>
+                    <span>📐 Margin Kertas Struk ({paperMarginMm}mm)</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      Limit: {paperMarginMm === 0 ? 32 : paperMarginMm === 1 ? 31 : paperMarginMm === 2 ? 30 : paperMarginMm === 3 ? 28 : paperMarginMm === 4 ? 27 : 25} char
+                    </span>
+                  </label>
+                  <input type="range" min="0" max="6" step="1" value={paperMarginMm}
+                    onChange={e => {
+                      const val = parseInt(e.target.value);
+                      setPaperMarginMm(val);
+                      setEditingTemplate(prev => ({ ...prev, paperMarginMm: val }));
+                      setIsSaved(false);
+                    }}
+                    style={{ width: '100%', accentColor: 'var(--accent-cyan)', marginBottom: '8px' }} />
+                  
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                    {[0, 1, 2, 3, 4, 5, 6].map(m => (
+                      <button key={m} type="button"
+                        className={`pill-btn ${paperMarginMm === m ? 'active' : ''}`}
+                        style={{ padding: '2px 8px', fontSize: '0.7rem' }}
+                        onClick={() => {
+                          setPaperMarginMm(m);
+                          setEditingTemplate(prev => ({ ...prev, paperMarginMm: m }));
+                          setIsSaved(false);
+                        }}>
+                        {m}mm
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Logo Upload & Reset */}
