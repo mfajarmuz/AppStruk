@@ -581,6 +581,13 @@ body {
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
 }
 
+.umo-input-pt-scaled {
+  border-color: #06b6d4 !important;
+  background: #ecfeff !important;
+  color: #0891b2 !important;
+  font-weight: 700 !important;
+}
+
 /* Toolbar Label (small grey text above controls) */
 .umo-toolbar-label {
   font-size: 0.6rem;

@@ -3,7 +3,7 @@ import {
   LayoutTemplate, Plus, Edit2, Trash2, Check, FileText, Tag, Search,
   AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, Underline, Strikethrough,
   ZoomIn, ZoomOut, Upload, ArrowLeft, MoveVertical, MoveHorizontal, Table, Minus,
-  Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save, X, AlertCircle, CheckCircle2, RotateCcw
+  Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save, X, AlertCircle, CheckCircle2, RotateCcw, Replace
 } from 'lucide-react';
 import { DEFAULT_TEMPLATES } from '../data/defaultTemplates';
 import { PertaminaLogoExact, parseReceiptTemplate } from './ReceiptPreview';
@@ -144,6 +144,11 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   // Gallery Search Query
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Find & Replace Drawer State
+  const [showFindReplace, setShowFindReplace] = useState(false);
+  const [findText, setFindText] = useState('');
+  const [replaceText, setReplaceText] = useState('');
+
   // Zoom (persisted in localStorage) & Margin
   const [zoom, setZoomState] = useState(() => parseFloat(localStorage.getItem('umo_editor_zoom')) || 1.2);
   const [paperMarginMm, setPaperMarginMm] = useState(0);
@@ -179,7 +184,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const insertBtnRef = useRef(null);
   const [insertMenuPos, setInsertMenuPos] = useState({ top: 0, left: 0 });
 
-  // Safe Non-blocking Notice Dispatcher (clears pending timeouts)
+  // Safe Non-blocking Notice Dispatcher
   const showNotice = (msg, duration = 3500) => {
     if (noticeTimeoutRef.current) clearTimeout(noticeTimeoutRef.current);
     setEditorNotice(msg);
@@ -200,6 +205,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       if (e.key === 'Escape') {
         setShowInsertMenu(false);
         setShowBubbleMenu(false);
+        setShowFindReplace(false);
       }
     };
     const handleClickOutside = (e) => {
@@ -350,7 +356,6 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       pushHistorySnapshot(html);
       setIsSaved(false);
 
-      // Count total lines
       const lineCount = editorCanvasRef.current.querySelectorAll('div, p').length || 1;
       setTotalLines(lineCount);
     }
@@ -374,10 +379,17 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     handleCanvasInput();
   };
 
-  // ─── KEYBOARD SHORTCUTS & TABLE TAB NAV ───
+  // ─── KEYBOARD SHORTCUTS, ESCAPE SCALED SPANS & TABLE TAB NAV ───
   const handleEditorKeyDown = (e) => {
     const isCtrl = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
+
+    // Ctrl+F Find & Replace Drawer
+    if (isCtrl && key === 'f') {
+      e.preventDefault();
+      setShowFindReplace(v => !v);
+      return;
+    }
 
     // Ctrl+A Select All Canvas Only
     if (isCtrl && key === 'a') {
@@ -390,6 +402,36 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
         sel.addRange(range);
       }
       return;
+    }
+
+    // Prevent Enter cloning scaled spans to new lines
+    if (e.key === 'Enter') {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let spanNode = selection.anchorNode;
+        while (spanNode && spanNode !== editorCanvasRef.current && spanNode.nodeName !== 'SPAN') {
+          spanNode = spanNode.parentNode;
+        }
+        if (spanNode && spanNode.style && spanNode.style.transform && spanNode.style.transform !== 'none') {
+          e.preventDefault();
+          let pNode = spanNode;
+          while (pNode && pNode !== editorCanvasRef.current && pNode.nodeName !== 'DIV' && pNode.nodeName !== 'P') {
+            pNode = pNode.parentNode;
+          }
+          const newDiv = document.createElement('div');
+          newDiv.innerHTML = '<br>';
+          if (pNode && pNode.parentNode) {
+            pNode.parentNode.insertBefore(newDiv, pNode.nextSibling);
+            const range = document.createRange();
+            range.setStart(newDiv, 0);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            handleCanvasInput();
+            return;
+          }
+        }
+      }
     }
 
     // Table Tab Navigation
@@ -467,7 +509,6 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     let node = selection.anchorNode;
     if (!node) return;
 
-    // Detect current line character count & line element
     let lineNode = node;
     while (lineNode && lineNode !== editorCanvasRef.current && lineNode.nodeName !== 'DIV' && lineNode.nodeName !== 'P') {
       lineNode = lineNode.parentNode;
@@ -481,6 +522,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     if (!node || !editorCanvasRef.current || !editorCanvasRef.current.contains(node)) return;
 
     const cs = window.getComputedStyle(node);
+
     // Font family
     const rawFont = (cs.fontFamily || '').toLowerCase();
     const matched = FONT_OPTIONS.find(f => rawFont.includes(f.label.toLowerCase().split(' ')[0].toLowerCase()));
@@ -544,7 +586,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     setShowBubbleMenu(false);
   };
 
-  // ─── APPLY INLINE STYLE ───────────────────
+  // ─── APPLY INLINE STYLE (Prevents Nested Span Bloat) ──────
   const applyInlineSelectionStyle = (styleObj) => {
     if (!editorCanvasRef.current) return;
     let selection = window.getSelection();
@@ -560,11 +602,19 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const range = selection.getRangeAt(0);
     const text = range.toString();
     if (!text) return;
-    const span = document.createElement('span');
-    Object.assign(span.style, styleObj);
-    span.textContent = text;
-    range.deleteContents();
-    range.insertNode(span);
+
+    // Check if selection anchor node is directly inside a single <span> to update existing span instead of nesting spans
+    let parentSpan = selection.anchorNode;
+    if (parentSpan && parentSpan.nodeType === Node.TEXT_NODE) parentSpan = parentSpan.parentNode;
+    if (parentSpan && parentSpan.nodeName === 'SPAN' && parentSpan !== editorCanvasRef.current && parentSpan.textContent === text) {
+      Object.assign(parentSpan.style, styleObj);
+    } else {
+      const span = document.createElement('span');
+      Object.assign(span.style, styleObj);
+      span.textContent = text;
+      range.deleteContents();
+      range.insertNode(span);
+    }
     handleCanvasInput();
     updateActiveToolbarState();
     editorCanvasRef.current.focus();
@@ -584,6 +634,44 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleY(${(n / base).toFixed(3)})` });
   };
 
+  // Reset Scale (1.0x / 100% normal)
+  const handleResetTextScale = () => {
+    restoreSavedSelectionRange();
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    let node = selection.anchorNode;
+    if (node && node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+    while (node && node !== editorCanvasRef.current && node.nodeName !== 'SPAN') {
+      node = node.parentNode;
+    }
+    if (node && node.nodeName === 'SPAN') {
+      node.style.transform = 'none';
+      node.style.display = 'inline';
+      handleCanvasInput();
+      updateActiveToolbarState();
+      showNotice('✓ Skala teks berhasil di-reset ke 1.0x (normal)!');
+    }
+  };
+
+  // Clear Formatting (Strip all inline styles)
+  const handleClearFormatting = () => {
+    restoreSavedSelectionRange();
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount || selection.isCollapsed) {
+      showNotice('💡 Blok/sorot teks terlebih dulu untuk menghapus format!');
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    const text = range.toString();
+    if (!text) return;
+    const textNode = document.createTextNode(text);
+    range.deleteContents();
+    range.insertNode(textNode);
+    handleCanvasInput();
+    updateActiveToolbarState();
+    showNotice('✓ Format teks berhasil dibersihkan!');
+  };
+
   const applyBlockLineStyle = (styleObj) => {
     const selection = window.getSelection();
     if (!selection.rangeCount) return;
@@ -595,13 +683,44 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
+  // Smart execCmd handling un-bolding spans & table cell alignment
   const execCmd = (cmd, val = null) => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      let node = selection.anchorNode;
+      if (node && node.nodeType === Node.TEXT_NODE) node = node.parentNode;
+
+      // Handle un-bolding / un-italicizing spans explicitly
+      if (node && node.nodeName === 'SPAN') {
+        if (cmd === 'bold' && activeBold) node.style.fontWeight = 'normal';
+        if (cmd === 'italic' && activeItalic) node.style.fontStyle = 'normal';
+        if (cmd === 'underline' && activeUnderline) node.style.textDecoration = (node.style.textDecoration || '').replace('underline', '').trim();
+        if (cmd === 'strikeThrough' && activeStrikethrough) node.style.textDecoration = (node.style.textDecoration || '').replace('line-through', '').trim();
+      }
+
+      // Handle table cell alignment
+      if (cmd.startsWith('justify')) {
+        let cellNode = selection.anchorNode;
+        while (cellNode && cellNode !== editorCanvasRef.current && cellNode.nodeName !== 'TD' && cellNode.nodeName !== 'TH') {
+          cellNode = cellNode.parentNode;
+        }
+        if (cellNode && (cellNode.nodeName === 'TD' || cellNode.nodeName === 'TH')) {
+          const alignMap = { justifyLeft: 'left', justifyCenter: 'center', justifyRight: 'right', justifyFull: 'justify' };
+          cellNode.style.textAlign = alignMap[cmd] || 'left';
+          handleCanvasInput();
+          updateActiveToolbarState();
+          return;
+        }
+      }
+    }
+
     document.execCommand(cmd, false, val);
     handleCanvasInput();
     updateActiveToolbarState();
     if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
+  // Restores saved selection before HTML insertion to guarantee insertion at user's cursor
   const insertHtmlAtCursor = (htmlStr) => {
     if (editorCanvasRef.current) {
       editorCanvasRef.current.focus();
@@ -621,6 +740,23 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     h += `</table><p><br></p>`;
     insertHtmlAtCursor(h);
     setShowInsertMenu(false);
+  };
+
+  // Find & Replace Handler
+  const handleReplaceAll = () => {
+    if (!findText.trim()) return;
+    if (editorCanvasRef.current) {
+      const html = editorCanvasRef.current.innerHTML;
+      const count = (html.match(new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+      if (count === 0) {
+        showNotice(`⚠️ Teks '${findText}' tidak ditemukan!`);
+        return;
+      }
+      const updatedHtml = html.replaceAll(findText, replaceText);
+      editorCanvasRef.current.innerHTML = updatedHtml;
+      handleCanvasInput();
+      showNotice(`✓ Berhasil mengganti ${count} kata '${findText}' menjadi '${replaceText}'!`);
+    }
   };
 
   // ─── TEMPLATE CRUD ────────────────────────
@@ -687,6 +823,9 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     (t.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
     (t.badge || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Check if active text has custom width/height scaling applied
+  const isTextScaled = textWidthPt !== activeFontSize || textHeightPt !== activeFontSize;
 
   // Compiled preview
   const compiledPreview = parseReceiptTemplate(editingTemplate.htmlContent || editingTemplate.pattern, formData || {});
@@ -781,9 +920,33 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
           <div className="card" style={{ padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
             <button className="btn btn-secondary" onClick={() => setEditorActive(false)}><ArrowLeft size={16} /> Kembali ke Galeri</button>
             <div style={{ display: 'flex', gap: '10px' }}>
+              <button className={`btn ${showFindReplace ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setShowFindReplace(v => !v)} title="Cari & Ganti Teks (Ctrl+F)">
+                <Replace size={16} /> Cari & Ganti
+              </button>
               <button className="btn btn-success" onClick={handleSaveTemplate}><Save size={16} /> Simpan Template</button>
             </div>
           </div>
+
+          {/* FIND & REPLACE DRAWER */}
+          {showFindReplace && (
+            <div className="umo-notice" style={{ background: '#ffffff', border: '1px solid #dadce0', borderRadius: '8px', padding: '10px 16px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+              <span style={{ fontWeight: 600, fontSize: '0.8rem', color: '#202124', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Replace size={14} /> Cari & Ganti Teks:
+              </span>
+              <input type="text" className="umo-input-pt" style={{ width: '150px', textAlign: 'left', padding: '0 8px' }}
+                value={findText} onChange={e => setFindText(e.target.value)} placeholder="Cari kata/tag..." />
+              <span style={{ fontSize: '0.8rem', color: '#70757a' }}>➜</span>
+              <input type="text" className="umo-input-pt" style={{ width: '150px', textAlign: 'left', padding: '0 8px' }}
+                value={replaceText} onChange={e => setReplaceText(e.target.value)} placeholder="Ganti dengan..." />
+              <button className="umo-btn" style={{ width: 'auto', padding: '0 10px', background: '#1a73e8', color: '#fff', fontSize: '0.75rem' }}
+                onClick={handleReplaceAll}>
+                Ganti Semua
+              </button>
+              <button className="umo-btn" style={{ width: '22px', height: '22px', marginLeft: 'auto' }} onClick={() => setShowFindReplace(false)}>
+                <X size={14} />
+              </button>
+            </div>
+          )}
 
           {/* SPLIT LAYOUT: Editor + Sticky Preview */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px', alignItems: 'start' }}>
@@ -833,12 +996,13 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
                 <div className="umo-toolbar-divider" />
 
-                {/* Group 3: B I U S */}
+                {/* Group 3: B I U S & Clear Formatting */}
                 <div className="umo-toolbar-group">
                   <button className={`umo-btn ${activeBold ? 'active' : ''}`} onClick={() => execCmd('bold')} title="Bold (Ctrl+B)"><Bold size={15} /></button>
                   <button className={`umo-btn ${activeItalic ? 'active' : ''}`} onClick={() => execCmd('italic')} title="Italic (Ctrl+I)"><Italic size={15} /></button>
                   <button className={`umo-btn ${activeUnderline ? 'active' : ''}`} onClick={() => execCmd('underline')} title="Underline (Ctrl+U)"><Underline size={15} /></button>
                   <button className={`umo-btn ${activeStrikethrough ? 'active' : ''}`} onClick={() => execCmd('strikeThrough')} title="Strikethrough (Ctrl+Shift+X)"><Strikethrough size={15} /></button>
+                  <button className="umo-btn" onClick={handleClearFormatting} title="Hapus Format (Clear Formatting)"><Scissors size={14} /></button>
                 </div>
 
                 <div className="umo-toolbar-divider" />
@@ -853,22 +1017,27 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
                 <div className="umo-toolbar-divider" />
 
-                {/* Group 5: Width & Height pt */}
+                {/* Group 5: Width & Height pt + Scale Reset */}
                 <div className="umo-toolbar-group" style={{ gap: '4px' }}>
                   <span className="umo-toolbar-label" style={{ marginRight: '2px' }}>W</span>
-                  <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
+                  <input type="number" className={`umo-input-pt ${isTextScaled ? 'umo-input-pt-scaled' : ''}`} step="0.5" min="4" max="60"
                     value={textWidthPt} onChange={e => setTextWidthPt(e.target.value)}
                     onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomWidthPt(textWidthPt); } }}
                     title="Lebar Teks (pt) — Enter untuk apply" />
                   <span className="umo-toolbar-label" style={{ marginLeft: '4px', marginRight: '2px' }}>H</span>
-                  <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
+                  <input type="number" className={`umo-input-pt ${isTextScaled ? 'umo-input-pt-scaled' : ''}`} step="0.5" min="4" max="60"
                     value={textHeightPt} onChange={e => setTextHeightPt(e.target.value)}
                     onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomHeightPt(textHeightPt); } }}
                     title="Tinggi Teks (pt) — Enter untuk apply" />
+                  {isTextScaled && (
+                    <button className="umo-btn" style={{ width: '22px', height: '22px' }} onClick={handleResetTextScale} title="Reset Skala Teks ke 1.0x (Normal)">
+                      <RotateCcw size={12} />
+                    </button>
+                  )}
                 </div>
 
                 <div className="umo-toolbar-divider" />
