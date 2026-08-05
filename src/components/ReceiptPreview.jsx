@@ -107,7 +107,7 @@ export default function ReceiptPreview({
       <div style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '320px' }}>
         <button
           className="btn btn-success btn-block"
-          onClick={() => onPrint(receiptRef.current?.innerHTML)}
+          onClick={() => onPrint(receiptRef.current?.outerHTML || receiptRef.current?.innerHTML)}
           disabled={isPrinting}
         >
           <Printer size={18} />

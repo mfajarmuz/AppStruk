@@ -926,3 +926,27 @@ body {
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
+
+/* BROWSER FALLBACK PRINTING (@media print) */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .receipt-wrapper, .receipt-wrapper * {
+    visibility: visible !important;
+  }
+  .receipt-wrapper {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 58mm !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding-top: 0 !important;
+    transform: none !important;
+  }
+  @page {
+    size: 58mm auto;
+    margin: 0;
+  }
+}

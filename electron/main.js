@@ -106,21 +106,49 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               margin: 0;
               size: ${paperWidthMm}mm auto;
             }
-            body {
+            html, body {
               margin: 0;
               padding: 0;
               width: ${paperWidthMm}mm;
-              font-family: 'Courier New', Courier, monospace, monospace;
-              font-size: ${settings?.fontSize || 12}px;
-              color: #000;
-              background: #fff;
+              font-family: 'Courier New', Courier, 'Consolas', monospace;
+              font-size: 12.5pt;
+              line-height: 1.35;
+              color: #000000;
+              background: #ffffff;
               -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
             * {
               box-sizing: border-box;
             }
+            .receipt-wrapper {
+              width: ${paperWidthMm}mm !important;
+              box-shadow: none !important;
+              border: none !important;
+              background: #ffffff !important;
+              color: #000000 !important;
+              font-family: 'Courier New', Courier, 'Consolas', monospace !important;
+              font-size: 12.5pt !important;
+              line-height: 1.35 !important;
+              transform: none !important;
+              margin: 0 !important;
+            }
+            span {
+              display: inline-block;
+              transform-origin: left center;
+            }
             img {
               max-width: 100%;
+              height: auto;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            hr {
+              border: none;
+              border-top: 1px dashed #000;
+              margin: 4px 0;
             }
           </style>
         </head>
