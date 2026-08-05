@@ -31,34 +31,54 @@ export function PertaminaLogoExact({ width = 160, height = 48 }) {
 export function parseReceiptTemplate(templatePatternText, data) {
   if (!templatePatternText) return '';
 
-  const commaPrice = (data.pricePerLiter || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  const commaTotal = (data.totalAmount || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  const literDot = (parseFloat(data.liter) || 0).toFixed(2);
-  const fuelFormatted = (data.fuelName || 'PERTAMINA_DEX').toUpperCase().replace(/\s+/g, '_');
+  const commaPrice = (data?.pricePerLiter || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const commaTotal = (data?.totalAmount || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const literDot = (parseFloat(data?.liter) || 0).toFixed(2);
+  const fuelFormatted = (data?.fuelName || 'PERTAMINA_DEX').toUpperCase().replace(/\s+/g, '_');
 
-  const dateStr = data.date || (data.dateTime ? data.dateTime.split(' ')[0] : '04/08/2026');
-  const timeStr = data.time || (data.dateTime ? data.dateTime.split(' ')[1] || '07:52:30' : '07:52:30');
-  const dateTimeCombined = data.dateTime || `${dateStr} ${timeStr}`;
+  const dateStr = data?.date || (data?.dateTime ? data.dateTime.split(' ')[0] : '04/08/2026');
+  const timeStr = data?.time || (data?.dateTime ? data.dateTime.split(' ')[1] || '07:52:30' : '07:52:30');
+  const dateTimeCombined = data?.dateTime || `${dateStr} ${timeStr}`;
 
-  return templatePatternText
-    .replace(/\{NO_SPBU\}/g, data.spbuNo || '3446125')
-    .replace(/\{NAMA_SPBU\}/g, (data.spbuName || 'SPBU RY SUKARAJA JENGGALA').toUpperCase())
-    .replace(/\{ALAMAT\}/g, (data.spbuAddress || 'JL. RAYA SUKARAJA DS. JENGGALA').toUpperCase())
-    .replace(/\{SHIFT\}/g, data.shift || '2')
-    .replace(/\{NO_TRANS\}/g, data.transactionNo ? data.transactionNo.replace('STR-', '') : '6101940')
+  let parsed = templatePatternText
+    .replace(/\{NO_SPBU\}/g, data?.spbuNo || '3446125')
+    .replace(/\{NAMA_SPBU\}/g, (data?.spbuName || 'SPBU RY SUKARAJA JENGGALA').toUpperCase())
+    .replace(/\{ALAMAT\}/g, (data?.spbuAddress || 'JL. RAYA SUKARAJA DS. JENGGALA').toUpperCase())
+    .replace(/\{SHIFT\}/g, data?.shift || '1')
+    .replace(/\{NO_TRANS\}/g, data?.transactionNo ? data.transactionNo.replace('STR-', '') : '6137760')
     .replace(/\{WAKTU\}/g, dateTimeCombined)
     .replace(/\{TANGGAL\}/g, dateStr)
     .replace(/\{JAM\}/g, timeStr)
-    .replace(/\{POMPA\}/g, data.pumpNo || '2')
+    .replace(/\{POMPA\}/g, data?.pumpNo || '1')
     .replace(/\{NAMA_PRODUK\}/g, fuelFormatted)
     .replace(/\{HARGA_LITER\}/g, commaPrice)
     .replace(/\{HARGA_RP\}/g, `Rp. ${commaPrice}`)
     .replace(/\{VOLUME\}/g, literDot)
     .replace(/\{TOTAL_HARGA\}/g, commaTotal)
     .replace(/\{TOTAL_RP\}/g, `Rp. ${commaTotal}`)
-    .replace(/\{OPERATOR\}/g, (data.operatorName || 'AGUS').toUpperCase())
-    .replace(/\{METODE_BAYAR\}/g, (data.paymentMethod || 'CASH').toUpperCase())
-    .replace(/\{PLAT_NO\}/g, (data.platNo || '').toUpperCase());
+    .replace(/\{OPERATOR\}/g, (data?.operatorName || 'AJIS').toUpperCase())
+    .replace(/\{METODE_BAYAR\}/g, (data?.paymentMethod || 'CASH').toUpperCase())
+    .replace(/\{PLAT_NO\}/g, (data?.platNo || '').toUpperCase());
+
+  // If text is plain text without HTML divs, convert into clean structured divs
+  if (!parsed.includes('<div') && !parsed.includes('<span')) {
+    const lines = parsed.split('\n');
+    parsed = lines.map(line => {
+      const trimmed = line.trim();
+      // Auto convert dash lines
+      if (/^-{4,}$/.test(trimmed)) {
+        return '<div style="border-top: 1px dashed #000; margin: 5px 0; width: 100%;"></div>';
+      }
+      // Auto convert 2-column spaced lines (e.g. CASH                 500,000)
+      const spaceMatch = line.match(/^(\S.*?)\s{5,}(\S.*)$/);
+      if (spaceMatch) {
+        return `<div style="display: flex; justify-content: space-between; width: 100%; margin: 0; padding: 0;"><span>${spaceMatch[1]}</span><span>${spaceMatch[2]}</span></div>`;
+      }
+      return `<div style="margin: 0; padding: 0;">${line || '&nbsp;'}</div>`;
+    }).join('');
+  }
+
+  return parsed;
 }
 
 export default function ReceiptPreview({
