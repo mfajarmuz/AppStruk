@@ -102,7 +102,7 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
     });
 
     const paperWidthMm = settings?.paperWidth || 58;
-    const isSilent = settings?.silentPrint !== undefined ? settings.silentPrint : true;
+    const isSilent = settings?.silentPrint !== undefined ? settings.silentPrint : false;
 
     // Standard 58mm printer page styling HTML string wrapper
     const fullHtml = `

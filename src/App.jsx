@@ -54,7 +54,7 @@ Operator   : {OPERATOR}
   const [printerSettings, setPrinterSettings] = useState({
     paperWidth: 58, // 5.7 cm - 5.8 cm paper width
     fontSize: 12,
-    silentPrint: true
+    silentPrint: false
   });
   const [isPrinting, setIsPrinting] = useState(false);
 

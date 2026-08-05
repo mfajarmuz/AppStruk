@@ -101,13 +101,20 @@ export default function ReceiptPreview({
     }
   };
 
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  const handleConfirmPrint = () => {
+    setShowPreviewModal(false);
+    onPrint(receiptRef.current?.outerHTML || receiptRef.current?.innerHTML);
+  };
+
   return (
     <div className="preview-container">
       {/* Action Buttons */}
       <div style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '320px' }}>
         <button
           className="btn btn-success btn-block"
-          onClick={() => onPrint(receiptRef.current?.outerHTML || receiptRef.current?.innerHTML)}
+          onClick={() => setShowPreviewModal(true)}
           disabled={isPrinting}
         >
           <Printer size={18} />
@@ -124,6 +131,68 @@ export default function ReceiptPreview({
           <span>Simpan ke Riwayat</span>
         </button>
       </div>
+
+      {/* PRINT PREVIEW MODAL DIALOG */}
+      {showPreviewModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0, 0, 0, 0.82)', backdropFilter: 'blur(4px)',
+          zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px'
+        }}>
+          <div className="card" style={{
+            width: '100%', maxWidth: '440px', maxHeight: '90vh', overflowY: 'auto',
+            background: 'var(--bg-card)', border: '1px solid var(--accent-cyan)',
+            borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.8)', padding: '20px'
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', pb: '10px' }}>
+              <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Printer size={20} /> Pratinjau Sebelum Cetak (Print Preview)
+              </div>
+              <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => setShowPreviewModal(false)}>✕</button>
+            </div>
+
+            {/* Thermal Receipt Preview Paper Card */}
+            <div style={{ background: '#334155', padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'center', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
+              <div className="receipt-wrapper" style={{ margin: 0, width: '384px', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-30px', boxShadow: '0 10px 25px rgba(0,0,0,0.6)' }}>
+                <div style={{ color: '#000', letterSpacing: '-0.2px' }}>
+                  {activeTemplate.showLogo !== false && (
+                    <div style={{ textAlign: 'center', marginBottom: `${currentLogoMarginBottom}px`, padding: 0, lineHeight: 1 }}>
+                      {activeTemplate.customLogoUrl || receiptData?.customLogoUrl ? (
+                        <img src={activeTemplate.customLogoUrl || receiptData.customLogoUrl} alt="Logo" style={{ width: `${currentLogoWidth}px`, height: 'auto', maxHeight: '70px', objectFit: 'contain', display: 'inline-block', margin: 0 }} />
+                      ) : (
+                        <div style={{ display: 'flex', justifyContent: 'center' }}><PertaminaLogoExact width={currentLogoWidth} /></div>
+                      )}
+                    </div>
+                  )}
+                  {activeTemplate.htmlContent ? (
+                    <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '12.5pt', lineHeight: '1.35' }} />
+                  ) : (
+                    <div style={{ whiteSpace: 'pre-wrap', fontFamily: "'Courier New', Courier, monospace", fontSize: '12.5pt', lineHeight: '1.35' }}>{compiledText}</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Printer Spec Summary */}
+            <div style={{ background: 'rgba(15,23,42,0.6)', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.78rem', display: 'flex', flexDirection: 'column', gap: '4px', border: '1px solid var(--border-color)' }}>
+              <div>📄 <b>Ukuran Kertas:</b> Thermal 58mm (384px @ 203 DPI)</div>
+              <div>🖨️ <b>Target Printer:</b> {selectedPrinter || 'Printer Windows Standar (Dialog Cetak)'}</div>
+              <div>✨ <b>Status Format:</b> Presisi 100% Sesuai Struk Fisik</div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setShowPreviewModal(false)}>
+                Batal
+              </button>
+              <button className="btn btn-success" style={{ flex: 2, background: 'linear-gradient(135deg, #10b981, #059669)', boxShadow: '0 4px 15px rgba(16,185,129,0.4)' }} onClick={handleConfirmPrint}>
+                <Printer size={18} /> Cetak Sekarang
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Control Bar: Selection Alignment Toolbar */}
       <div
