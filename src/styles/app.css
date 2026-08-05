@@ -394,3 +394,438 @@ body {
   color: #fff;
   border-color: var(--accent-blue);
 }
+
+/* ============================================ */
+/* UMO EDITOR - GOOGLE DOCS STYLE REDESIGN     */
+/* ============================================ */
+
+/* Editor Workspace Container (neutral grey background) */
+.umo-workspace {
+  background: #e8ebed;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 400px;
+  position: relative;
+  overflow-y: auto;
+}
+
+/* Editor Header Bar (template name + save) */
+.umo-header {
+  background: #ffffff;
+  border-bottom: 1px solid #dadce0;
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.umo-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #202124;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.umo-header-title svg {
+  color: #1a73e8;
+}
+
+.umo-header-input {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #202124;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  outline: none;
+  min-width: 200px;
+  transition: all 0.15s ease;
+}
+
+.umo-header-input:hover {
+  border-color: #dadce0;
+}
+
+.umo-header-input:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+}
+
+/* Static Single-Row Action Bar (Google Docs style toolbar) */
+.umo-toolbar {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dadce0;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.umo-toolbar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.umo-toolbar::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 2px;
+}
+
+/* Toolbar Group (separated by vertical dividers) */
+.umo-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 4px;
+}
+
+/* Vertical Divider Between Groups */
+.umo-toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: #dadce0;
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+/* Toolbar Button (28x28 standard like Google Docs) */
+.umo-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #444746;
+  transition: background 0.1s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.umo-btn:hover {
+  background: #e8eaed;
+}
+
+.umo-btn.active {
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+.umo-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.umo-btn[title]:hover::after {
+  /* tooltip handled by native title */
+}
+
+/* Toolbar Dropdown Select (Font, Size) */
+.umo-select {
+  height: 28px;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 4px;
+  padding: 0 24px 0 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #202124;
+  cursor: pointer;
+  outline: none;
+  appearance: auto;
+  transition: all 0.1s ease;
+}
+
+.umo-select:hover {
+  background: #e8eaed;
+  border-color: #dadce0;
+}
+
+.umo-select:focus {
+  border-color: #1a73e8;
+  background: #ffffff;
+}
+
+/* Toolbar Numeric Input (Width/Height pt) */
+.umo-input-pt {
+  width: 52px;
+  height: 28px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #202124;
+  text-align: center;
+  outline: none;
+  background: #ffffff;
+  transition: border-color 0.15s ease;
+}
+
+.umo-input-pt:hover {
+  border-color: #bdc1c6;
+}
+
+.umo-input-pt:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
+}
+
+/* Toolbar Label (small grey text above controls) */
+.umo-toolbar-label {
+  font-size: 0.6rem;
+  color: #70757a;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+/* Toolbar Stack (label + control stacked vertically) */
+.umo-toolbar-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+/* Ruler Above Paper Canvas */
+.umo-ruler {
+  width: 384px;
+  height: 22px;
+  background: #f8f9fa;
+  border: 1px solid #dadce0;
+  border-bottom: none;
+  border-radius: 2px 2px 0 0;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  user-select: none;
+  overflow: hidden;
+}
+
+.umo-ruler-tick {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  background: #bdc1c6;
+}
+
+.umo-ruler-tick.major {
+  height: 10px;
+  background: #70757a;
+}
+
+.umo-ruler-tick.minor {
+  height: 5px;
+}
+
+.umo-ruler-label {
+  position: absolute;
+  bottom: 10px;
+  font-size: 0.5rem;
+  color: #70757a;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+/* Paper Canvas (384px = 58mm at 203 DPI) */
+.umo-paper {
+  width: 384px;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 20px 16px;
+  min-height: 340px;
+  position: relative;
+  font-family: 'Courier New', Courier, 'Consolas', monospace;
+  font-size: 12.5px;
+  line-height: 1.35;
+  letter-spacing: -0.2px;
+}
+
+.umo-paper-editable {
+  outline: none;
+  cursor: text;
+  min-height: 260px;
+}
+
+/* Status Bar at Bottom */
+.umo-statusbar {
+  background: #f8f9fa;
+  border-top: 1px solid #dadce0;
+  height: 28px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #70757a;
+  user-select: none;
+}
+
+.umo-statusbar-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.umo-statusbar-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.umo-statusbar-saved {
+  color: #188038;
+  font-weight: 500;
+}
+
+.umo-statusbar-unsaved {
+  color: #ea4335;
+  font-weight: 500;
+}
+
+/* Zoom Controls in Status Bar */
+.umo-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.umo-zoom-btn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #70757a;
+  transition: background 0.1s ease;
+}
+
+.umo-zoom-btn:hover {
+  background: #e8eaed;
+  color: #202124;
+}
+
+.umo-zoom-slider {
+  width: 80px;
+  height: 4px;
+  accent-color: #1a73e8;
+}
+
+.umo-zoom-label {
+  font-size: 0.7rem;
+  color: #202124;
+  font-weight: 500;
+  min-width: 36px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.umo-zoom-label:hover {
+  background: #e8eaed;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+/* Floating Selection Bubble Menu (absolute in canvas container) */
+.umo-bubble-menu {
+  position: absolute;
+  z-index: 100;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 4px 6px;
+  display: flex;
+  gap: 2px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  animation: umo-fade-in 0.12s ease;
+}
+
+@keyframes umo-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Insert Dropdown Menu */
+.umo-insert-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 200;
+  background: #ffffff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 6px 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  min-width: 240px;
+  animation: umo-fade-in 0.12s ease;
+}
+
+.umo-insert-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  color: #202124;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  transition: background 0.1s ease;
+}
+
+.umo-insert-menu-item:hover {
+  background: #f1f3f4;
+}
+
+.umo-insert-menu-item svg {
+  color: #70757a;
+  flex-shrink: 0;
+}
+
+.umo-insert-menu-divider {
+  height: 1px;
+  background: #e8eaed;
+  margin: 4px 0;
+}
+
+/* Non-blocking Notice Toast */
+.umo-notice {
+  background: #e8f0fe;
+  color: #174ea6;
+  padding: 6px 16px;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  border-bottom: 1px solid #d2e3fc;
+}
+
+/* Editor Container (wraps header + toolbar + canvas + statusbar) */
+.umo-editor-container {
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
