@@ -3,7 +3,7 @@ import {
   LayoutTemplate, Plus, Edit2, Trash2, Check, FileText, Tag,
   AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, Underline, Strikethrough,
   ZoomIn, ZoomOut, Upload, ArrowLeft, MoveVertical, MoveHorizontal, Table, Minus,
-  Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save, X
+  Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save, X, AlertCircle, CheckCircle2
 } from 'lucide-react';
 import { DEFAULT_TEMPLATES } from '../data/defaultTemplates';
 import { PertaminaLogoExact, parseReceiptTemplate } from './ReceiptPreview';
@@ -46,10 +46,12 @@ const AVAILABLE_TAGS = [
 
 const SPECIAL_SYMBOLS = ['⛽', '🚗', '✓', '★', '☎', '№', 'Rp.', '--------------------------------', '================================'];
 
-// ─── RULER COMPONENT ──────────────────────────────────────
-function Ruler({ widthPx, widthMm, zoom }) {
+// ─── RULER COMPONENT WITH MARGIN SHADING ──────────────────
+function Ruler({ widthPx, widthMm, zoom, marginMm }) {
   const ticks = [];
   const pxPerMm = widthPx / widthMm;
+  const marginPx = marginMm * pxPerMm * zoom;
+
   for (let mm = 0; mm <= widthMm; mm++) {
     const x = mm * pxPerMm * zoom;
     const isMajor = mm % 5 === 0;
@@ -62,34 +64,64 @@ function Ruler({ widthPx, widthMm, zoom }) {
       );
     }
   }
-  return <div className="umo-ruler" style={{ width: `${widthPx * zoom}px` }}>{ticks}</div>;
+  return (
+    <div className="umo-ruler" style={{ width: `${widthPx * zoom}px` }}>
+      {/* Margin Left Overlay */}
+      {marginPx > 0 && (
+        <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${marginPx}px`, background: 'rgba(234, 67, 53, 0.15)', borderRight: '1px dashed #ea4335', zIndex: 2 }} />
+      )}
+      {/* Margin Right Overlay */}
+      {marginPx > 0 && (
+        <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: `${marginPx}px`, background: 'rgba(234, 67, 53, 0.15)', borderLeft: '1px dashed #ea4335', zIndex: 2 }} />
+      )}
+      {ticks}
+    </div>
+  );
 }
 
-// ─── STATUS BAR COMPONENT ─────────────────────────────────
-function StatusBar({ zoom, setZoom, isSaved }) {
+// ─── STATUS BAR COMPONENT WITH REALTIME CHAR COUNT ─────────
+function StatusBar({ zoom, setZoom, isSaved, currentLineChars, paperMarginMm, setPaperMarginMm }) {
+  const isOverLimit = currentLineChars > MAX_CHARS_PER_LINE;
   return (
     <div className="umo-statusbar">
       <div className="umo-statusbar-section">
         <span className="umo-statusbar-item">📄 Kertas: 58mm ({PAPER_WIDTH_PX}px)</span>
-        <span className="umo-statusbar-item">│ Max: {MAX_CHARS_PER_LINE} Karakter/Baris</span>
+        <span className={`umo-statusbar-item ${isOverLimit ? 'umo-statusbar-unsaved' : ''}`} style={{ fontWeight: isOverLimit ? 700 : 500 }}>
+          │ Baris ini: {currentLineChars}/{MAX_CHARS_PER_LINE} char {isOverLimit ? '⚠️ Exceeds!' : ''}
+        </span>
         <span className={`umo-statusbar-item ${isSaved ? 'umo-statusbar-saved' : 'umo-statusbar-unsaved'}`}>
-          {isSaved ? '✓ Tersimpan' : '⚠ Belum disimpan'}
+          │ {isSaved ? '✓ Tersimpan' : '⚠ Belum disimpan'}
         </span>
       </div>
-      <div className="umo-zoom-controls">
-        <button className="umo-zoom-btn" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} title="Zoom Out">
-          <ZoomOut size={14} />
-        </button>
-        <input
-          type="range" className="umo-zoom-slider" min="0.5" max="2.5" step="0.1"
-          value={zoom} onChange={e => setZoom(parseFloat(e.target.value))}
-        />
-        <button className="umo-zoom-btn" onClick={() => setZoom(z => Math.min(2.5, z + 0.1))} title="Zoom In">
-          <ZoomIn size={14} />
-        </button>
-        <span className="umo-zoom-label" onClick={() => setZoom(1)} title="Reset ke 100%">
-          {Math.round(zoom * 100)}%
-        </span>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Margin Selector */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}>
+          <span>Margin:</span>
+          <select className="umo-select" style={{ height: '22px', fontSize: '0.7rem', padding: '0 16px 0 4px' }}
+            value={paperMarginMm} onChange={e => setPaperMarginMm(parseInt(e.target.value))}>
+            <option value={0}>0mm (Full)</option>
+            <option value={2}>2mm (Standar)</option>
+            <option value={4}>4mm (Lebar)</option>
+          </select>
+        </div>
+
+        {/* Zoom Controls */}
+        <div className="umo-zoom-controls">
+          <button className="umo-zoom-btn" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} title="Zoom Out">
+            <ZoomOut size={14} />
+          </button>
+          <input
+            type="range" className="umo-zoom-slider" min="0.5" max="2.5" step="0.1"
+            value={zoom} onChange={e => setZoom(parseFloat(e.target.value))}
+          />
+          <button className="umo-zoom-btn" onClick={() => setZoom(z => Math.min(2.5, z + 0.1))} title="Zoom In">
+            <ZoomIn size={14} />
+          </button>
+          <span className="umo-zoom-label" onClick={() => setZoom(1)} title="Reset ke 100%">
+            {Math.round(zoom * 100)}%
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -103,8 +135,9 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const savedSelectionRangeRef = useRef(null);
   const historyDebounceRef = useRef(null);
 
-  // Zoom
+  // Zoom & Margin
   const [zoom, setZoom] = useState(1.2);
+  const [paperMarginMm, setPaperMarginMm] = useState(0);
 
   // Live Detected Formatting State
   const [activeFontFamily, setActiveFontFamily] = useState('');
@@ -112,19 +145,30 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const [activeBold, setActiveBold] = useState(false);
   const [activeItalic, setActiveItalic] = useState(false);
   const [activeUnderline, setActiveUnderline] = useState(false);
+  const [activeStrikethrough, setActiveStrikethrough] = useState(false);
   const [activeAlignment, setActiveAlignment] = useState('left');
   const [textWidthPt, setTextWidthPt] = useState('12.5');
   const [textHeightPt, setTextHeightPt] = useState('12.5');
+  const [currentLineChars, setCurrentLineChars] = useState(0);
 
   // Non-blocking notice & insert menu
   const [editorNotice, setEditorNotice] = useState('');
+  const [galleryNotice, setGalleryNotice] = useState('');
   const [showInsertMenu, setShowInsertMenu] = useState(false);
   const [isSaved, setIsSaved] = useState(true);
   const insertMenuRef = useRef(null);
   const insertBtnRef = useRef(null);
   const [insertMenuPos, setInsertMenuPos] = useState({ top: 0, left: 0 });
 
-  // Click-outside to close Insert Menu
+  // Recalculate Insert Menu Position
+  const updateInsertMenuPos = useCallback(() => {
+    if (insertBtnRef.current) {
+      const rect = insertBtnRef.current.getBoundingClientRect();
+      setInsertMenuPos({ top: rect.bottom + 4, left: Math.max(8, rect.right - 320) });
+    }
+  }, []);
+
+  // Click-outside & Scroll/Resize listener to close Insert Menu
   useEffect(() => {
     if (!showInsertMenu) return;
     const handleClickOutside = (e) => {
@@ -133,8 +177,17 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
         setShowInsertMenu(false);
       }
     };
+    const handleScrollOrResize = () => {
+      setShowInsertMenu(false);
+    };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
   }, [showInsertMenu]);
 
   // Template being edited
@@ -252,7 +305,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const handlePaste = (e) => {
     e.preventDefault();
     let text = e.clipboardData.getData('text/plain') || '';
-    // Strip any non-printable chars except newlines
+    // Strip non-printable chars except newlines
     text = text.replace(/[^\S\n]+/g, ' ').replace(/\r\n/g, '\n');
     document.execCommand('insertText', false, text);
     handleCanvasInput();
@@ -260,16 +313,22 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
   // ─── KEYBOARD SHORTCUTS ───────────────────
   const handleEditorKeyDown = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
-      e.preventDefault(); handleUndo(); return;
-    }
-    if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') ||
-        ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
-      e.preventDefault(); handleRedo(); return;
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-      e.preventDefault(); handleSaveTemplate(); return;
-    }
+    const isCtrl = e.ctrlKey || e.metaKey;
+    const key = e.key.toLowerCase();
+
+    // Undo / Redo
+    if (isCtrl && key === 'z' && !e.shiftKey) { e.preventDefault(); handleUndo(); return; }
+    if ((isCtrl && key === 'y') || (isCtrl && e.shiftKey && key === 'z')) { e.preventDefault(); handleRedo(); return; }
+
+    // Save
+    if (isCtrl && key === 's') { e.preventDefault(); handleSaveTemplate(); return; }
+
+    // Formatting Shortcuts: Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Shift+X (Strikethrough)
+    if (isCtrl && key === 'b') { e.preventDefault(); execCmd('bold'); return; }
+    if (isCtrl && key === 'i') { e.preventDefault(); execCmd('italic'); return; }
+    if (isCtrl && key === 'u') { e.preventDefault(); execCmd('underline'); return; }
+    if (isCtrl && e.shiftKey && key === 'x') { e.preventDefault(); execCmd('strikeThrough'); return; }
+
     if (e.key === 'Backspace') {
       if (editorCanvasRef.current && editorCanvasRef.current.innerText.trim() === '') {
         setTimeout(() => {
@@ -287,6 +346,16 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     if (!selection || selection.rangeCount === 0) return;
     let node = selection.anchorNode;
     if (!node) return;
+
+    // Detect current line character count
+    let lineNode = node;
+    while (lineNode && lineNode !== editorCanvasRef.current && lineNode.nodeName !== 'DIV' && lineNode.nodeName !== 'P') {
+      lineNode = lineNode.parentNode;
+    }
+    if (lineNode && lineNode !== editorCanvasRef.current) {
+      setCurrentLineChars(lineNode.innerText ? lineNode.innerText.replace(/\n/g, '').length : 0);
+    }
+
     if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
     if (!node || !editorCanvasRef.current || !editorCanvasRef.current.contains(node)) return;
 
@@ -295,16 +364,22 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const rawFont = (cs.fontFamily || '').toLowerCase();
     const matched = FONT_OPTIONS.find(f => rawFont.includes(f.label.toLowerCase().split(' ')[0].toLowerCase()));
     if (matched) setActiveFontFamily(matched.value);
+
     // Font size
     const pxSize = parseFloat(cs.fontSize) || 12.5;
     setActiveFontSize((pxSize * 0.75).toFixed(1).replace(/\.0$/, ''));
-    // Bold / Italic / Underline
+
+    // Bold / Italic / Underline / Strikethrough
     const weight = cs.fontWeight;
     setActiveBold(weight === 'bold' || weight === '700' || parseInt(weight) >= 600);
     setActiveItalic(cs.fontStyle === 'italic');
-    setActiveUnderline((cs.textDecorationLine || cs.textDecoration || '').includes('underline'));
+    const dec = (cs.textDecorationLine || cs.textDecoration || '').toLowerCase();
+    setActiveUnderline(dec.includes('underline'));
+    setActiveStrikethrough(dec.includes('line-through'));
+
     // Alignment
     setActiveAlignment(cs.textAlign || 'left');
+
     // ScaleX/Y → Width/Height pt
     let scX = 1, scY = 1;
     const t = cs.transform;
@@ -325,10 +400,12 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       const rect = range.getBoundingClientRect();
       const containerRect = canvasContainerRef.current?.getBoundingClientRect();
       if (rect.width > 0 && containerRect) {
-        setBubblePos({
-          top: rect.top - containerRect.top - 42,
-          left: rect.left - containerRect.left + rect.width / 2 - 100
-        });
+        const topPx = (rect.top - containerRect.top + canvasContainerRef.current.scrollTop - 42);
+        const leftPx = Math.max(10, Math.min(
+          (rect.left - containerRect.left + canvasContainerRef.current.scrollLeft + (rect.width / 2) - 90),
+          containerRect.width - 200
+        ));
+        setBubblePos({ top: topPx, left: leftPx });
         setShowBubbleMenu(true);
         return;
       }
@@ -364,12 +441,14 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   };
 
   const applyCustomWidthPt = (val) => {
+    restoreSavedSelectionRange();
     const n = parseFloat(val); if (isNaN(n) || n <= 0) return;
     const base = parseFloat(activeFontSize) || 12.5;
     applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleX(${(n / base).toFixed(3)})`, letterSpacing: '0.5px' });
   };
 
   const applyCustomHeightPt = (val) => {
+    restoreSavedSelectionRange();
     const n = parseFloat(val); if (isNaN(n) || n <= 0) return;
     const base = parseFloat(activeFontSize) || 12.5;
     applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleY(${(n / base).toFixed(3)})` });
@@ -405,7 +484,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     let h = `<table style="width:100%;border-collapse:collapse;margin:6px 0;font-size:inherit;">`;
     for (let r = 0; r < rows; r++) {
       h += `<tr>`;
-      for (let c = 0; c < cols; c++) h += `<td style="border:1px dashed #bbb;padding:2px 4px;">${c === 0 ? `Item ${r + 1}` : `Nilai`}</td>`;
+      for (let c = 0; c < cols; c++) h += `<td style="border:1px dashed #bbb;padding:3px 6px;">${c === 0 ? `Item ${r + 1}` : `Rp 0`}</td>`;
       h += `</tr>`;
     }
     h += `</table><p><br></p>`;
@@ -430,7 +509,11 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   };
 
   const handleSaveTemplate = () => {
-    if (!editingTemplate.name) { alert('Nama template tidak boleh kosong!'); return; }
+    if (!editingTemplate.name.trim()) {
+      setEditorNotice('⚠️ Nama template tidak boleh kosong!');
+      setTimeout(() => setEditorNotice(''), 3500);
+      return;
+    }
     const currentHtml = editorCanvasRef.current ? editorCanvasRef.current.innerHTML : editingTemplate.htmlContent;
     const currentPattern = editorCanvasRef.current ? editorCanvasRef.current.innerText : editingTemplate.pattern;
     const saved = { ...editingTemplate, htmlContent: currentHtml, pattern: currentPattern };
@@ -439,10 +522,16 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       return exists ? prev.map(t => t.id === saved.id ? saved : t) : [...prev, saved];
     });
     setIsSaved(true);
+    setEditorNotice('✓ Template berhasil disimpan!');
+    setTimeout(() => setEditorNotice(''), 3500);
   };
 
   const handleDeleteTemplate = (id) => {
-    if (templates.length <= 1) { alert('Minimal harus ada 1 template!'); return; }
+    if (templates.length <= 1) {
+      setGalleryNotice('⚠️ Minimal harus ada 1 template!');
+      setTimeout(() => setGalleryNotice(''), 3500);
+      return;
+    }
     setTemplates(prev => prev.filter(t => t.id !== id));
   };
 
@@ -459,6 +548,9 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
   // Compiled preview
   const compiledPreview = parseReceiptTemplate(editingTemplate.htmlContent || editingTemplate.pattern, formData || {});
+
+  // Margin in Px for Canvas Padding
+  const marginPx = Math.round(paperMarginMm * (PAPER_WIDTH_PX / PAPER_WIDTH_MM));
 
   // ─── RENDER ───────────────────────────────
   return (
@@ -478,6 +570,12 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               </button>
             </div>
           </div>
+
+          {galleryNotice && (
+            <div className="umo-notice" style={{ marginBottom: '16px', borderRadius: '8px' }}>
+              <Info size={16} /> {galleryNotice}
+            </div>
+          )}
 
           <div className="template-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
             {templates.map(tpl => {
@@ -499,7 +597,11 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
-                      onClick={() => { onSelectTemplate(tpl.id, tpl); alert(`Template '${tpl.name}' dipilih!`); }}>
+                      onClick={() => {
+                        onSelectTemplate(tpl.id, tpl);
+                        setGalleryNotice(`✓ Template '${tpl.name}' berhasil dipilih sebagai template aktif!`);
+                        setTimeout(() => setGalleryNotice(''), 3500);
+                      }}>
                       <Check size={16} /> Gunakan
                     </button>
                     <button className="btn btn-secondary" style={{ padding: '8px 12px' }} title="Edit" onClick={() => handleEditTemplate(tpl)}><Edit2 size={16} /></button>
@@ -515,7 +617,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {/* Back + Save Bar (app dark theme) */}
           <div className="card" style={{ padding: '10px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
-            <button className="btn btn-secondary" onClick={() => setEditorActive(false)}><ArrowLeft size={16} /> Kembali</button>
+            <button className="btn btn-secondary" onClick={() => setEditorActive(false)}><ArrowLeft size={16} /> Kembali ke Galeri</button>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="btn btn-success" onClick={handleSaveTemplate}><Save size={16} /> Simpan Template</button>
             </div>
@@ -543,7 +645,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 </div>
               </div>
 
-              {/* STATIC ACTION BAR (Google Docs Style) - Row 1: Formatting */}
+              {/* STATIC ACTION BAR (Google Docs Style) */}
               <div className="umo-toolbar">
                 {/* Group 1: Font Family */}
                 <div className="umo-toolbar-group">
@@ -572,7 +674,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <button className={`umo-btn ${activeBold ? 'active' : ''}`} onClick={() => execCmd('bold')} title="Bold (Ctrl+B)"><Bold size={15} /></button>
                   <button className={`umo-btn ${activeItalic ? 'active' : ''}`} onClick={() => execCmd('italic')} title="Italic (Ctrl+I)"><Italic size={15} /></button>
                   <button className={`umo-btn ${activeUnderline ? 'active' : ''}`} onClick={() => execCmd('underline')} title="Underline (Ctrl+U)"><Underline size={15} /></button>
-                  <button className={`umo-btn` } onClick={() => execCmd('strikeThrough')} title="Strikethrough"><Strikethrough size={15} /></button>
+                  <button className={`umo-btn ${activeStrikethrough ? 'active' : ''}`} onClick={() => execCmd('strikeThrough')} title="Strikethrough (Ctrl+Shift+X)"><Strikethrough size={15} /></button>
                 </div>
 
                 <div className="umo-toolbar-divider" />
@@ -587,17 +689,19 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
                 <div className="umo-toolbar-divider" />
 
-                {/* Group 5: Width & Height pt — inline horizontal */}
+                {/* Group 5: Width & Height pt */}
                 <div className="umo-toolbar-group" style={{ gap: '4px' }}>
                   <span className="umo-toolbar-label" style={{ marginRight: '2px' }}>W</span>
                   <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
                     value={textWidthPt} onChange={e => setTextWidthPt(e.target.value)}
+                    onMouseDown={(e) => { saveCurrentSelectionRange(); }}
                     onFocus={saveCurrentSelectionRange}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomWidthPt(textWidthPt); } }}
                     title="Lebar Teks (pt) — Enter untuk apply" />
                   <span className="umo-toolbar-label" style={{ marginLeft: '4px', marginRight: '2px' }}>H</span>
                   <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
                     value={textHeightPt} onChange={e => setTextHeightPt(e.target.value)}
+                    onMouseDown={(e) => { saveCurrentSelectionRange(); }}
                     onFocus={saveCurrentSelectionRange}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomHeightPt(textHeightPt); } }}
                     title="Tinggi Teks (pt) — Enter untuk apply" />
@@ -625,10 +729,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     className={`umo-btn ${showInsertMenu ? 'active' : ''}`}
                     style={{ width: 'auto', padding: '0 8px', gap: '4px', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}
                     onClick={() => {
-                      if (!showInsertMenu && insertBtnRef.current) {
-                        const rect = insertBtnRef.current.getBoundingClientRect();
-                        setInsertMenuPos({ top: rect.bottom + 4, left: Math.max(8, rect.right - 320) });
-                      }
+                      if (!showInsertMenu) updateInsertMenuPos();
                       setShowInsertMenu(v => !v);
                     }} title="Sisipkan elemen ke struk">
                     <Plus size={14} /> <span style={{ fontSize: '0.72rem' }}>Sisipkan</span> <ChevronDown size={12} />
@@ -694,6 +795,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     <button className={`umo-btn ${activeBold ? 'active' : ''}`} onClick={() => execCmd('bold')}><Bold size={13} /></button>
                     <button className={`umo-btn ${activeItalic ? 'active' : ''}`} onClick={() => execCmd('italic')}><Italic size={13} /></button>
                     <button className={`umo-btn ${activeUnderline ? 'active' : ''}`} onClick={() => execCmd('underline')}><Underline size={13} /></button>
+                    <button className={`umo-btn ${activeStrikethrough ? 'active' : ''}`} onClick={() => execCmd('strikeThrough')}><Strikethrough size={13} /></button>
                     <div className="umo-toolbar-divider" style={{ height: '18px' }} />
                     <button className={`umo-btn ${activeAlignment === 'left' || activeAlignment === 'start' ? 'active' : ''}`} onClick={() => execCmd('justifyLeft')}><AlignLeft size={13} /></button>
                     <button className={`umo-btn ${activeAlignment === 'center' ? 'active' : ''}`} onClick={() => execCmd('justifyCenter')}><AlignCenter size={13} /></button>
@@ -702,10 +804,10 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 )}
 
                 {/* Ruler */}
-                <Ruler widthPx={PAPER_WIDTH_PX} widthMm={PAPER_WIDTH_MM} zoom={zoom} />
+                <Ruler widthPx={PAPER_WIDTH_PX} widthMm={PAPER_WIDTH_MM} zoom={zoom} marginMm={paperMarginMm} />
 
                 {/* Paper Canvas */}
-                <div className="umo-paper" style={{ width: `${PAPER_WIDTH_PX * zoom}px`, transform: `scale(1)`, transformOrigin: 'top center' }}>
+                <div className="umo-paper" style={{ width: `${PAPER_WIDTH_PX * zoom}px`, paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, transform: `scale(1)`, transformOrigin: 'top center' }}>
                   <div
                     ref={editorCanvasRef}
                     className="umo-paper-editable"
@@ -717,6 +819,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     onMouseUp={handleCanvasSelection}
                     onKeyUp={handleCanvasSelection}
                     onClick={updateActiveToolbarState}
+                    onSelect={saveCurrentSelectionRange}
                     style={{
                       fontFamily: "'Courier New', Courier, monospace",
                       fontSize: `${12.5 * zoom}px`,
@@ -727,7 +830,11 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               </div>
 
               {/* STATUS BAR */}
-              <StatusBar zoom={zoom} setZoom={setZoom} isSaved={isSaved} />
+              <StatusBar
+                zoom={zoom} setZoom={setZoom} isSaved={isSaved}
+                currentLineChars={currentLineChars}
+                paperMarginMm={paperMarginMm} setPaperMarginMm={setPaperMarginMm}
+              />
             </div>
 
             {/* ── RIGHT: LIVE PREVIEW + SETTINGS ── */}
