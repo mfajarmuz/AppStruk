@@ -2,12 +2,68 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-// Disable GPU cache access issues on some Windows environments and enable local file ESM module loading
+const http = require('http');
+
+// Disable GPU cache access issues on some Windows environments
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-software-rasterizer');
-app.commandLine.appendSwitch('allow-file-access-from-files');
 
 let mainWindow;
+let localServerUrl = '';
+
+function startLocalServer() {
+  return new Promise((resolve) => {
+    const distFolder = path.join(__dirname, '../dist');
+    const mimeTypes = {
+      '.html': 'text/html; charset=utf-8',
+      '.js': 'text/javascript; charset=utf-8',
+      '.css': 'text/css; charset=utf-8',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon',
+      '.woff': 'font/woff',
+      '.woff2': 'font/woff2'
+    };
+
+    const server = http.createServer((req, res) => {
+      let reqUrl = req.url.split('?')[0];
+      let safePath = path.normalize(reqUrl);
+      if (safePath === '/' || safePath === '\\') safePath = '/index.html';
+      
+      let filePath = path.join(distFolder, safePath);
+      
+      if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+        filePath = path.join(distFolder, 'index.html');
+      }
+
+      const ext = path.extname(filePath).toLowerCase();
+      const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+      fs.readFile(filePath, (err, content) => {
+        if (err) {
+          res.writeHead(500);
+          res.end('Server Error');
+        } else {
+          res.writeHead(200, {
+            'Content-Type': contentType,
+            'Cache-Control': 'no-cache',
+            'Access-Control-Allow-Origin': '*'
+          });
+          res.end(content);
+        }
+      });
+    });
+
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port;
+      localServerUrl = `http://127.0.0.1:${port}`;
+      console.log(`Local HTTP server running at ${localServerUrl}`);
+      resolve(localServerUrl);
+    });
+  });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -21,15 +77,16 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
-      nodeIntegration: false,
-      webSecurity: false
+      nodeIntegration: false
     }
   });
 
   const distPath = path.join(__dirname, '../dist/index.html');
   
-  if (fs.existsSync(distPath)) {
-    mainWindow.loadFile(distPath);
+  if (localServerUrl) {
+    mainWindow.loadURL(localServerUrl);
+  } else if (fs.existsSync(distPath)) {
+    startLocalServer().then(url => mainWindow.loadURL(url));
   } else {
     mainWindow.loadURL('http://localhost:5173');
   }
@@ -205,7 +262,11 @@ ipcMain.handle('get-app-info', () => {
   };
 });
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  const distPath = path.join(__dirname, '../dist/index.html');
+  if (fs.existsSync(distPath)) {
+    await startLocalServer();
+  }
   createWindow();
 
   app.on('activate', () => {
