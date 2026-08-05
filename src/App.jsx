@@ -88,7 +88,10 @@ Operator   : {OPERATOR}
       try {
         const loadedTemplates = await dbService.loadData('templates');
         if (loadedTemplates && Array.isArray(loadedTemplates) && loadedTemplates.length > 0) {
-          setTemplates(loadedTemplates);
+          const freshTemplates = DEFAULT_TEMPLATES.map(def => def).concat(
+            loadedTemplates.filter(t => !DEFAULT_TEMPLATES.some(d => d.id === t.id))
+          );
+          setTemplates(freshTemplates);
         }
 
         const loadedFuels = await dbService.loadData('fuels');

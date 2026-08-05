@@ -1429,6 +1429,18 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     <RotateCcw size={14} /> Reset ke Logo Pertamina SVG
                   </button>
                 )}
+
+                <button type="button" className="btn btn-secondary btn-block" style={{ marginTop: '10px', fontSize: '0.75rem', padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'rgba(59,130,246,0.15)', border: '1px solid rgba(59,130,246,0.4)', color: 'var(--accent-blue)' }}
+                  onClick={() => {
+                    const def = DEFAULT_TEMPLATES.find(d => d.id === editingTemplate.id) || DEFAULT_TEMPLATES[0];
+                    setEditingTemplate(prev => ({ ...prev, htmlContent: def.htmlContent, pattern: def.pattern }));
+                    if (editorCanvasRef.current) {
+                      editorCanvasRef.current.innerHTML = def.htmlContent;
+                    }
+                    showNotice('✓ Format template berhasil di-reset ke standar resmi Pertamina!');
+                  }}>
+                  <RotateCcw size={14} /> Reset Format ke Standar Resmi Pertamina
+                </button>
               </div>
             </div>
           </div>
