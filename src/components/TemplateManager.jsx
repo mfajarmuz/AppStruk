@@ -1119,7 +1119,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 {/* Group 5: Width & Height pt + Scale Reset */}
                 <div className="umo-toolbar-group" style={{ gap: '4px' }}>
                   <span className="umo-toolbar-label" style={{ marginRight: '2px' }}>W</span>
-                  <input type="number" className={`umo-input-pt ${isTextScaled ? 'umo-input-pt-scaled' : ''}`} step="0.5" min="4" max="60"
+                  <input type="number" className={`umo-input-pt ${isTextScaled ? 'umo-input-pt-scaled' : ''}`} step="0.1" min="4" max="60"
                     value={textWidthPt}
                     onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
@@ -1131,7 +1131,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomWidthPt(textWidthPt); } }}
                     title="Lebar Teks (pt) — Gunakan panah / ketik" />
                   <span className="umo-toolbar-label" style={{ marginLeft: '4px', marginRight: '2px' }}>H</span>
-                  <input type="number" className={`umo-input-pt ${isTextScaled ? 'umo-input-pt-scaled' : ''}`} step="0.5" min="4" max="60"
+                  <input type="number" className={`umo-input-pt ${isTextScaled ? 'umo-input-pt-scaled' : ''}`} step="0.1" min="4" max="60"
                     value={textHeightPt}
                     onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
