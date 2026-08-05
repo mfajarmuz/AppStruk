@@ -78,6 +78,9 @@ export function parseReceiptTemplate(templatePatternText, data) {
     }).join('');
   }
 
+  // Always sanitize any remaining raw dash lines into clean vector borders
+  parsed = parsed.replace(/(<div[^>]*>)?\s*(-{4,})\s*(<\/div>)?/g, '<div style="border-top: 1px dashed #000; margin: 5px 0; width: 100%;"></div>');
+
   return parsed;
 }
 
