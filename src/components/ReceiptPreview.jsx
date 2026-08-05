@@ -211,11 +211,7 @@ export default function ReceiptPreview({
                       )}
                     </div>
                   )}
-                  {activeTemplate.htmlContent ? (
-                    <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '7.5pt', fontWeight: 600, lineHeight: '1.25', letterSpacing: '-0.4px' }} />
-                  ) : (
-                    <div style={{ whiteSpace: 'pre-wrap', fontFamily: "'Courier New', Courier, monospace", fontSize: '7.5pt', fontWeight: 600, lineHeight: '1.25', letterSpacing: '-0.4px' }}>{compiledText}</div>
-                  )}
+                  <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '7.5pt', fontWeight: 600, lineHeight: '1.25', letterSpacing: '-0.4px' }} />
                 </div>
               </div>
             </div>
@@ -324,45 +320,25 @@ export default function ReceiptPreview({
           )}
 
           {/* Direct ContentEditable Struk Paper Area */}
-          {activeTemplate.htmlContent ? (
-            <div
-              ref={editableRef}
-              contentEditable={true}
-              suppressContentEditableWarning={true}
-              onInput={handleDirectInlineEdit}
-              dangerouslySetInnerHTML={{ __html: compiledText }}
-              style={{
-                outline: 'none',
-                cursor: 'text',
-                padding: '2px',
-                borderRadius: '2px',
-                minHeight: '200px'
-              }}
-            />
-          ) : (
-            <div
-              ref={editableRef}
-              contentEditable={true}
-              suppressContentEditableWarning={true}
-              onInput={handleDirectInlineEdit}
-              style={{
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                fontFamily: "'Courier New', Courier, monospace",
-                fontSize: '7.5pt',
-                fontWeight: 600,
-                lineHeight: '1.25',
-                letterSpacing: '-0.4px',
-                outline: 'none',
-                cursor: 'text',
-                padding: '2px',
-                borderRadius: '2px',
-                minHeight: '200px'
-              }}
-            >
-              {compiledText}
-            </div>
-          )}
+          <div
+            ref={editableRef}
+            contentEditable={true}
+            suppressContentEditableWarning={true}
+            onInput={handleDirectInlineEdit}
+            dangerouslySetInnerHTML={{ __html: compiledText }}
+            style={{
+              outline: 'none',
+              cursor: 'text',
+              padding: '2px',
+              borderRadius: '2px',
+              minHeight: '200px',
+              fontFamily: "'Courier New', Courier, monospace",
+              fontSize: '7.5pt',
+              fontWeight: 600,
+              lineHeight: '1.25',
+              letterSpacing: '-0.4px'
+            }}
+          />
         </div>
       </div>
     </div>
