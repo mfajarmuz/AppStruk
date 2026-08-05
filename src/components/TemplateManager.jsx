@@ -227,13 +227,18 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const handleScrollOrResize = () => {
       setShowInsertMenu(false);
     };
+    const handleSelectionChangeGlobal = () => {
+      saveCurrentSelectionRange();
+    };
     document.addEventListener('keydown', handleKeyDownGlobal);
     document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('selectionchange', handleSelectionChangeGlobal);
     window.addEventListener('scroll', handleScrollOrResize, true);
     window.addEventListener('resize', handleScrollOrResize);
     return () => {
       document.removeEventListener('keydown', handleKeyDownGlobal);
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('selectionchange', handleSelectionChangeGlobal);
       window.removeEventListener('scroll', handleScrollOrResize, true);
       window.removeEventListener('resize', handleScrollOrResize);
     };
@@ -274,7 +279,9 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
       if (editorCanvasRef.current && editorCanvasRef.current.contains(range.commonAncestorContainer)) {
-        savedSelectionRangeRef.current = range.cloneRange();
+        if (!range.collapsed) {
+          savedSelectionRangeRef.current = range.cloneRange();
+        }
       }
     }
   };
@@ -605,10 +612,11 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   // ─── APPLY INLINE STYLE (Preserves All Lines, Divs, Brs, & Applies Font to All Nodes) ──────
   const applyInlineSelectionStyle = (styleObj) => {
     if (!editorCanvasRef.current) return;
+
+    // Always attempt to restore saved non-collapsed selection range first!
+    restoreSavedSelectionRange();
+
     let selection = window.getSelection();
-    if (!selection || !selection.rangeCount || selection.isCollapsed) {
-      if (restoreSavedSelectionRange()) selection = window.getSelection();
-    }
     if (!selection || !selection.rangeCount || selection.isCollapsed) {
       showNotice('💡 Blok/sorot teks terlebih dulu untuk mengubah format!');
       editorCanvasRef.current.focus();
