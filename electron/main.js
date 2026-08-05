@@ -160,9 +160,10 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
     });
 
     const paperWidthMm = settings?.paperWidth || 58;
+    const printableWidthMm = paperWidthMm === 58 ? 48 : 72;
     const isSilent = settings?.silentPrint !== undefined ? settings.silentPrint : false;
 
-    // Standard 58mm printer page styling HTML string wrapper
+    // Standard 58mm POS thermal printer page styling HTML string wrapper
     const fullHtml = `
       <!DOCTYPE html>
       <html>
@@ -176,11 +177,11 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
             html, body {
               margin: 0;
               padding: 0;
-              width: ${paperWidthMm}mm;
+              width: ${printableWidthMm}mm;
               font-family: 'Courier New', Courier, 'Consolas', monospace;
-              font-size: 9.5pt;
-              line-height: 1.25;
-              letter-spacing: -0.3px;
+              font-size: 8.5pt;
+              line-height: 1.2;
+              letter-spacing: -0.2px;
               color: #000000;
               background: #ffffff;
               -webkit-print-color-adjust: exact;
@@ -190,17 +191,18 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               box-sizing: border-box;
             }
             .receipt-wrapper {
-              width: ${paperWidthMm}mm !important;
+              width: ${printableWidthMm}mm !important;
               box-shadow: none !important;
               border: none !important;
               background: #ffffff !important;
               color: #000000 !important;
               font-family: 'Courier New', Courier, 'Consolas', monospace !important;
-              font-size: 9.5pt !important;
-              line-height: 1.25 !important;
-              letter-spacing: -0.3px !important;
+              font-size: 8.5pt !important;
+              line-height: 1.2 !important;
+              letter-spacing: -0.2px !important;
               transform: none !important;
               margin: 0 !important;
+              padding: 0 !important;
             }
             span {
               display: inline-block;
@@ -236,7 +238,12 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
         deviceName: printerName || '',
         margins: {
           marginType: 'none'
-        }
+        },
+        pageSize: {
+          width: paperWidthMm * 1000,
+          height: 200000
+        },
+        scaleFactor: 100
       };
 
       if (!printerName) {

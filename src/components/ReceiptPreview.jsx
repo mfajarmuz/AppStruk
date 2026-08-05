@@ -167,9 +167,9 @@ export default function ReceiptPreview({
                     </div>
                   )}
                   {activeTemplate.htmlContent ? (
-                    <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '9.5pt', lineHeight: '1.25', letterSpacing: '-0.3px' }} />
+                    <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '8.5pt', lineHeight: '1.2', letterSpacing: '-0.2px' }} />
                   ) : (
-                    <div style={{ whiteSpace: 'pre-wrap', fontFamily: "'Courier New', Courier, monospace", fontSize: '9.5pt', lineHeight: '1.25', letterSpacing: '-0.3px' }}>{compiledText}</div>
+                    <div style={{ whiteSpace: 'pre-wrap', fontFamily: "'Courier New', Courier, monospace", fontSize: '8.5pt', lineHeight: '1.2', letterSpacing: '-0.2px' }}>{compiledText}</div>
                   )}
                 </div>
               </div>
@@ -304,9 +304,9 @@ export default function ReceiptPreview({
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
                 fontFamily: "'Courier New', Courier, monospace",
-                fontSize: '9.5pt',
-                lineHeight: '1.25',
-                letterSpacing: '-0.3px',
+                fontSize: '8.5pt',
+                lineHeight: '1.2',
+                letterSpacing: '-0.2px',
                 outline: 'none',
                 cursor: 'text',
                 padding: '2px',
