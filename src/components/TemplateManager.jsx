@@ -692,14 +692,25 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const textNode = document.createTextNode(text);
     range.deleteContents();
     range.insertNode(textNode);
+
+    try {
+      const newRange = document.createRange();
+      newRange.setStartAfter(textNode);
+      newRange.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+      savedSelectionRangeRef.current = newRange.cloneRange();
+    } catch (err) { /* ignore fallback */ }
+
     handleCanvasInput();
     updateActiveToolbarState();
     showNotice('✓ Format teks berhasil dibersihkan!');
   };
 
   const applyBlockLineStyle = (styleObj) => {
+    restoreSavedSelectionRange();
     const selection = window.getSelection();
-    if (!selection.rangeCount) return;
+    if (!selection || !selection.rangeCount) return;
     let node = selection.anchorNode;
     while (node && node !== editorCanvasRef.current && node.nodeName !== 'DIV' && node.nodeName !== 'P') node = node.parentNode;
     if (node && node !== editorCanvasRef.current) Object.assign(node.style, styleObj);
@@ -1027,6 +1038,8 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 {/* Group 1: Font Family */}
                 <div className="umo-toolbar-group">
                   <select className="umo-select" style={{ width: '120px' }} value={activeFontFamily}
+                    onMouseDown={() => saveCurrentSelectionRange()}
+                    onFocus={saveCurrentSelectionRange}
                     onChange={e => applyInlineSelectionStyle({ fontFamily: e.target.value })}>
                     <option value="" disabled>Font</option>
                     {FONT_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
@@ -1038,6 +1051,8 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 {/* Group 2: Font Size */}
                 <div className="umo-toolbar-group">
                   <select className="umo-select" style={{ width: '64px' }} value={activeFontSize}
+                    onMouseDown={() => saveCurrentSelectionRange()}
+                    onFocus={saveCurrentSelectionRange}
                     onChange={e => applyInlineSelectionStyle({ fontSize: `${e.target.value}pt` })}>
                     <option value="" disabled>pt</option>
                     {dynamicSizeOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -1048,21 +1063,39 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
                 {/* Group 3: B I U S & Clear Formatting */}
                 <div className="umo-toolbar-group">
-                  <button className={`umo-btn ${activeBold ? 'active' : ''}`} onClick={() => execCmd('bold')} title="Bold (Ctrl+B)"><Bold size={15} /></button>
-                  <button className={`umo-btn ${activeItalic ? 'active' : ''}`} onClick={() => execCmd('italic')} title="Italic (Ctrl+I)"><Italic size={15} /></button>
-                  <button className={`umo-btn ${activeUnderline ? 'active' : ''}`} onClick={() => execCmd('underline')} title="Underline (Ctrl+U)"><Underline size={15} /></button>
-                  <button className={`umo-btn ${activeStrikethrough ? 'active' : ''}`} onClick={() => execCmd('strikeThrough')} title="Strikethrough (Ctrl+Shift+X)"><Strikethrough size={15} /></button>
-                  <button className="umo-btn" onClick={handleClearFormatting} title="Hapus Format (Clear Formatting)"><Scissors size={14} /></button>
+                  <button className={`umo-btn ${activeBold ? 'active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => execCmd('bold')} title="Bold (Ctrl+B)"><Bold size={15} /></button>
+                  <button className={`umo-btn ${activeItalic ? 'active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => execCmd('italic')} title="Italic (Ctrl+I)"><Italic size={15} /></button>
+                  <button className={`umo-btn ${activeUnderline ? 'active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => execCmd('underline')} title="Underline (Ctrl+U)"><Underline size={15} /></button>
+                  <button className={`umo-btn ${activeStrikethrough ? 'active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => execCmd('strikeThrough')} title="Strikethrough (Ctrl+Shift+X)"><Strikethrough size={15} /></button>
+                  <button className="umo-btn"
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={handleClearFormatting} title="Hapus Format (Clear Formatting)"><Scissors size={14} /></button>
                 </div>
 
                 <div className="umo-toolbar-divider" />
 
                 {/* Group 4: Alignment */}
                 <div className="umo-toolbar-group">
-                  <button className={`umo-btn ${activeAlignment === 'left' || activeAlignment === 'start' ? 'active' : ''}`} onClick={() => execCmd('justifyLeft')} title="Rata Kiri"><AlignLeft size={15} /></button>
-                  <button className={`umo-btn ${activeAlignment === 'center' ? 'active' : ''}`} onClick={() => execCmd('justifyCenter')} title="Rata Tengah"><AlignCenter size={15} /></button>
-                  <button className={`umo-btn ${activeAlignment === 'right' ? 'active' : ''}`} onClick={() => execCmd('justifyRight')} title="Rata Kanan"><AlignRight size={15} /></button>
-                  <button className={`umo-btn ${activeAlignment === 'justify' ? 'active' : ''}`} onClick={() => execCmd('justifyFull')} title="Rata Penuh"><AlignJustify size={15} /></button>
+                  <button className={`umo-btn ${activeAlignment === 'left' || activeAlignment === 'start' ? 'active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => execCmd('justifyLeft')} title="Rata Kiri"><AlignLeft size={15} /></button>
+                  <button className={`umo-btn ${activeAlignment === 'center' ? 'active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => execCmd('justifyCenter')} title="Rata Tengah"><AlignCenter size={15} /></button>
+                  <button className={`umo-btn ${activeAlignment === 'right' ? 'active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => execCmd('justifyRight')} title="Rata Kanan"><AlignRight size={15} /></button>
+                  <button className={`umo-btn ${activeAlignment === 'justify' ? 'active' : ''}`}
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => execCmd('justifyFull')} title="Rata Penuh"><AlignJustify size={15} /></button>
                 </div>
 
                 <div className="umo-toolbar-divider" />
@@ -1094,7 +1127,9 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomHeightPt(textHeightPt); } }}
                     title="Tinggi Teks (pt) — Gunakan panah / ketik" />
                   {isTextScaled && (
-                    <button className="umo-btn" style={{ width: '22px', height: '22px' }} onClick={handleResetTextScale} title="Reset Skala Teks ke 1.0x (Normal)">
+                    <button className="umo-btn" style={{ width: '22px', height: '22px' }}
+                      onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                      onClick={handleResetTextScale} title="Reset Skala Teks ke 1.0x (Normal)">
                       <RotateCcw size={12} />
                     </button>
                   )}
@@ -1105,6 +1140,8 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 {/* Group 6: Line Spacing */}
                 <div className="umo-toolbar-group">
                   <select className="umo-select" style={{ width: '56px' }} value={activeLineHeight}
+                    onMouseDown={() => saveCurrentSelectionRange()}
+                    onFocus={saveCurrentSelectionRange}
                     onChange={e => applyBlockLineStyle({ lineHeight: e.target.value })} title="Line Spacing">
                     <option value="" disabled>⇕</option>
                     <option value="1.1">1.1</option>
@@ -1200,14 +1237,14 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 {/* Floating Bubble Menu (absolute to workspace) */}
                 {showBubbleMenu && (
                   <div className="umo-bubble-menu" style={{ top: `${bubblePos.top}px`, left: `${bubblePos.left}px` }}>
-                    <button className={`umo-btn ${activeBold ? 'active' : ''}`} onClick={() => execCmd('bold')}><Bold size={13} /></button>
-                    <button className={`umo-btn ${activeItalic ? 'active' : ''}`} onClick={() => execCmd('italic')}><Italic size={13} /></button>
-                    <button className={`umo-btn ${activeUnderline ? 'active' : ''}`} onClick={() => execCmd('underline')}><Underline size={13} /></button>
-                    <button className={`umo-btn ${activeStrikethrough ? 'active' : ''}`} onClick={() => execCmd('strikeThrough')}><Strikethrough size={13} /></button>
+                    <button className={`umo-btn ${activeBold ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('bold')}><Bold size={13} /></button>
+                    <button className={`umo-btn ${activeItalic ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('italic')}><Italic size={13} /></button>
+                    <button className={`umo-btn ${activeUnderline ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('underline')}><Underline size={13} /></button>
+                    <button className={`umo-btn ${activeStrikethrough ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('strikeThrough')}><Strikethrough size={13} /></button>
                     <div className="umo-toolbar-divider" style={{ height: '18px' }} />
-                    <button className={`umo-btn ${activeAlignment === 'left' || activeAlignment === 'start' ? 'active' : ''}`} onClick={() => execCmd('justifyLeft')}><AlignLeft size={13} /></button>
-                    <button className={`umo-btn ${activeAlignment === 'center' ? 'active' : ''}`} onClick={() => execCmd('justifyCenter')}><AlignCenter size={13} /></button>
-                    <button className={`umo-btn ${activeAlignment === 'right' ? 'active' : ''}`} onClick={() => execCmd('justifyRight')}><AlignRight size={13} /></button>
+                    <button className={`umo-btn ${activeAlignment === 'left' || activeAlignment === 'start' ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyLeft')}><AlignLeft size={13} /></button>
+                    <button className={`umo-btn ${activeAlignment === 'center' ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyCenter')}><AlignCenter size={13} /></button>
+                    <button className={`umo-btn ${activeAlignment === 'right' ? 'active' : ''}`} onMouseDown={(e) => e.preventDefault()} onClick={() => execCmd('justifyRight')}><AlignRight size={13} /></button>
                   </div>
                 )}
 
