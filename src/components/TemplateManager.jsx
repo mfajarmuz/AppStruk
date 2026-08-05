@@ -55,10 +55,17 @@ const AVAILABLE_TAGS = [
 const SPECIAL_SYMBOLS = ['⛽', '🚗', '✓', '★', '☎', '№', 'Rp.', '--------------------------------', '================================'];
 
 // ─── RULER COMPONENT WITH MARGIN SHADING ──────────────────
-function Ruler({ widthPx, widthMm, zoom, marginMm }) {
+function Ruler({ widthPx, widthMm, zoom, marginMm, setPaperMarginMm }) {
   const ticks = [];
   const pxPerMm = widthPx / widthMm;
   const marginPx = marginMm * pxPerMm * zoom;
+
+  const handleRulerClick = () => {
+    if (setPaperMarginMm) {
+      const nextMargin = marginMm === 0 ? 2 : marginMm === 2 ? 4 : 0;
+      setPaperMarginMm(nextMargin);
+    }
+  };
 
   for (let mm = 0; mm <= widthMm; mm++) {
     const x = mm * pxPerMm * zoom;
@@ -73,7 +80,7 @@ function Ruler({ widthPx, widthMm, zoom, marginMm }) {
     }
   }
   return (
-    <div className="umo-ruler" style={{ width: `${widthPx * zoom}px` }}>
+    <div className="umo-ruler" style={{ width: `${widthPx * zoom}px`, cursor: 'pointer' }} onClick={handleRulerClick} title="Klik penggaris untuk ganti margin (0mm / 2mm / 4mm)">
       {marginPx > 0 && (
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${marginPx}px`, background: 'rgba(234, 67, 53, 0.15)', borderRight: '1px dashed #ea4335', zIndex: 2 }} />
       )}
@@ -369,10 +376,14 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const html = e.clipboardData.getData('text/html');
     const text = e.clipboardData.getData('text/plain') || '';
 
-    if (html && (html.includes('style="') || html.includes('{'))) {
+    if (html && (html.includes('style="') || html.includes('<img') || html.includes('{'))) {
       const temp = document.createElement('div');
       temp.innerHTML = html;
       temp.querySelectorAll('script, iframe, style, link').forEach(el => el.remove());
+      temp.querySelectorAll('img').forEach(img => {
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+      });
       document.execCommand('insertHTML', false, temp.innerHTML);
     } else {
       const cleanText = text.replace(/[^\S\n]+/g, ' ').replace(/\r\n/g, '\n');
@@ -511,13 +522,21 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     let node = selection.anchorNode;
     if (!node) return;
 
-    let lineNode = node;
-    while (lineNode && lineNode !== editorCanvasRef.current && lineNode.nodeName !== 'DIV' && lineNode.nodeName !== 'P') {
-      lineNode = lineNode.parentNode;
-    }
-    if (lineNode && lineNode !== editorCanvasRef.current) {
-      const lineLen = lineNode.innerText ? lineNode.innerText.replace(/\n/g, '').length : 0;
-      setCurrentLineChars(lineLen);
+    // Check if entire text or large range is selected (e.g. Ctrl+A)
+    if (!selection.isCollapsed) {
+      const rangeStr = selection.toString();
+      if (rangeStr.length > 50 && rangeStr.includes('\n')) {
+        setCurrentLineChars(`Semua (${rangeStr.length})`);
+      }
+    } else {
+      let lineNode = node;
+      while (lineNode && lineNode !== editorCanvasRef.current && lineNode.nodeName !== 'DIV' && lineNode.nodeName !== 'P') {
+        lineNode = lineNode.parentNode;
+      }
+      if (lineNode && lineNode !== editorCanvasRef.current) {
+        const lineLen = lineNode.innerText ? lineNode.innerText.replace(/\n/g, '').length : 0;
+        setCurrentLineChars(lineLen);
+      }
     }
 
     if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
@@ -535,13 +554,19 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const computedPt = (pxSize * 0.75).toFixed(1).replace(/\.0$/, '');
     setActiveFontSize(computedPt);
 
-    // Line Height
+    // Line Height (Numeric closest match)
     const rawLh = cs.lineHeight;
     if (rawLh && rawLh !== 'normal') {
-      const parsedLh = (parseFloat(rawLh) / pxSize).toFixed(2);
-      if (['1.10', '1.1', '1.35', '1.60', '1.6', '2.00', '2.0'].includes(parsedLh)) {
-        setActiveLineHeight(parsedLh);
+      const parsedLh = parseFloat(rawLh) / pxSize;
+      if (!isNaN(parsedLh)) {
+        const lhOptions = [1.1, 1.35, 1.6, 2.0];
+        const closestLh = lhOptions.reduce((prev, curr) =>
+          Math.abs(curr - parsedLh) < Math.abs(prev - parsedLh) ? curr : prev
+        );
+        setActiveLineHeight(closestLh.toString());
       }
+    } else {
+      setActiveLineHeight('1.35');
     }
 
     // Bold / Italic / Underline / Strikethrough
@@ -1249,7 +1274,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 )}
 
                 {/* Ruler */}
-                <Ruler widthPx={PAPER_WIDTH_PX} widthMm={PAPER_WIDTH_MM} zoom={zoom} marginMm={paperMarginMm} />
+                <Ruler widthPx={PAPER_WIDTH_PX} widthMm={PAPER_WIDTH_MM} zoom={zoom} marginMm={paperMarginMm} setPaperMarginMm={setPaperMarginMm} />
 
                 {/* Paper Canvas */}
                 <div className="umo-paper" style={{ width: `${PAPER_WIDTH_PX * zoom}px`, paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, transform: `scale(1)`, transformOrigin: 'top center' }}>
