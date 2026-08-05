@@ -307,19 +307,19 @@ body {
   height: 100%;
 }
 
-/* AUTHENTIC PHYSICAL THERMAL RECEIPT CANVAS */
+/* AUTHENTIC PHYSICAL THERMAL RECEIPT CANVAS (58mm @ 203 DPI = 384px) */
 .receipt-wrapper {
   background: #ffffff;
   color: #000000;
-  width: 320px;
-  padding: 24px 20px;
+  width: 384px;
+  padding: 16px 0px;
   border-radius: 4px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
   position: relative;
   font-family: 'Courier New', Courier, 'Consolas', monospace;
-  font-size: 12.5px;
+  font-size: 12.5pt;
   line-height: 1.35;
-  letter-spacing: -0.2px;
+  letter-spacing: normal;
 }
 
 /* FONT UTILITIES & STYLES */

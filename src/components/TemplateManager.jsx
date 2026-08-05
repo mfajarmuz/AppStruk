@@ -1340,7 +1340,16 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <EyeIcon /> Live Preview Struk 58mm
                 </div>
-                <div className="receipt-wrapper" style={{ width: '300px', margin: 0, boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
+                <div className="receipt-wrapper" style={{
+                  width: `${PAPER_WIDTH_PX}px`,
+                  paddingLeft: `${marginPx}px`,
+                  paddingRight: `${marginPx}px`,
+                  margin: '0 auto',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                  transform: 'scale(0.85)',
+                  transformOrigin: 'top center',
+                  marginBottom: '-35px'
+                }}>
                   <div style={{ color: '#000' }}>
                     <div style={{ textAlign: 'center', marginBottom: `${editingTemplate.logoMarginBottom !== undefined ? editingTemplate.logoMarginBottom : -4}px`, padding: 0, lineHeight: 1 }}>
                       {editingTemplate.customLogoUrl
