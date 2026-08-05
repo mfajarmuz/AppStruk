@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Printer, Save, Image, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, Bold } from 'lucide-react';
 
 // Exact Authentic Pertamina Logo Vector SVG
