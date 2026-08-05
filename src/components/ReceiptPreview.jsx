@@ -71,7 +71,8 @@ export default function ReceiptPreview({
   template,
   onPrint,
   onSaveHistory,
-  isPrinting
+  isPrinting,
+  selectedPrinter = ''
 }) {
   const receiptRef = useRef(null);
   const editableRef = useRef(null);

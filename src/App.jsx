@@ -326,6 +326,7 @@ Operator   : {OPERATOR}
               onPrint={handlePrintReceipt}
               onSaveHistory={handleSaveHistory}
               isPrinting={isPrinting}
+              selectedPrinter={selectedPrinter}
             />
           </div>
         )}
