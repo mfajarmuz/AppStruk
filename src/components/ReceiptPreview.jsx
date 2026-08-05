@@ -183,35 +183,37 @@ export default function ReceiptPreview({
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: 'rgba(0, 0, 0, 0.82)', backdropFilter: 'blur(4px)',
-          zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px'
+          zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '16px'
         }}>
           <div className="card" style={{
-            width: '100%', maxWidth: '440px', maxHeight: '90vh', overflowY: 'auto',
+            width: '100%', maxWidth: '480px', maxHeight: '92vh', overflowY: 'auto',
             background: 'var(--bg-card)', border: '1px solid var(--accent-cyan)',
-            borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.8)', padding: '20px'
+            borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.8)', padding: '16px 20px'
           }}>
             {/* Modal Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid var(--border-color)', pb: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
               <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Printer size={20} /> Pratinjau Sebelum Cetak (Print Preview)
               </div>
               <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => setShowPreviewModal(false)}>✕</button>
             </div>
 
-            {/* Thermal Receipt Preview Paper Card */}
-            <div style={{ background: '#334155', padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'center', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
-              <div className="receipt-wrapper" style={{ margin: 0, width: '384px', paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-30px', boxShadow: '0 10px 25px rgba(0,0,0,0.6)' }}>
-                <div style={{ color: '#000', letterSpacing: '-0.2px' }}>
-                  {activeTemplate.showLogo !== false && (
-                    <div style={{ textAlign: 'center', marginBottom: `${currentLogoMarginBottom}px`, padding: 0, lineHeight: 1 }}>
-                      {activeTemplate.customLogoUrl || receiptData?.customLogoUrl ? (
-                        <img src={activeTemplate.customLogoUrl || receiptData.customLogoUrl} alt="Logo" style={{ width: `${currentLogoWidth}px`, height: 'auto', maxHeight: '70px', objectFit: 'contain', display: 'inline-block', margin: 0 }} />
-                      ) : (
-                        <div style={{ display: 'flex', justifyContent: 'center' }}><PertaminaLogoExact width={currentLogoWidth} /></div>
-                      )}
-                    </div>
-                  )}
-                  <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '7.5pt', fontWeight: 600, lineHeight: '1.25', letterSpacing: '-0.4px' }} />
+            {/* Thermal Receipt Preview Paper Card - Fixed Uncompressed 384px Bounding Box */}
+            <div style={{ background: '#334155', padding: '16px 8px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', marginBottom: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+              <div style={{ width: '384px', minWidth: '384px', flexShrink: 0, height: 'auto', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-40px' }}>
+                <div className="receipt-wrapper" style={{ margin: '0 auto', width: '384px', minWidth: '384px', maxWidth: '384px', boxSizing: 'border-box', paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, boxShadow: '0 10px 25px rgba(0,0,0,0.6)' }}>
+                  <div style={{ color: '#000', letterSpacing: '-0.2px' }}>
+                    {activeTemplate.showLogo !== false && (
+                      <div style={{ textAlign: 'center', marginBottom: `${currentLogoMarginBottom}px`, padding: 0, lineHeight: 1 }}>
+                        {activeTemplate.customLogoUrl || receiptData?.customLogoUrl ? (
+                          <img src={activeTemplate.customLogoUrl || receiptData.customLogoUrl} alt="Logo" style={{ width: `${currentLogoWidth}px`, height: 'auto', maxHeight: '70px', objectFit: 'contain', display: 'inline-block', margin: 0 }} />
+                        ) : (
+                          <div style={{ display: 'flex', justifyContent: 'center' }}><PertaminaLogoExact width={currentLogoWidth} /></div>
+                        )}
+                      </div>
+                    )}
+                    <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '7.5pt', fontWeight: 600, lineHeight: '1.25', letterSpacing: '-0.4px' }} />
+                  </div>
                 </div>
               </div>
             </div>
