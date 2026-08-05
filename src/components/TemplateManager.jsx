@@ -603,21 +603,35 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const text = range.toString();
     if (!text) return;
 
-    // Check if selection anchor node is directly inside a single <span> to update existing span instead of nesting spans
+    let targetSpan = null;
     let parentSpan = selection.anchorNode;
     if (parentSpan && parentSpan.nodeType === Node.TEXT_NODE) parentSpan = parentSpan.parentNode;
     if (parentSpan && parentSpan.nodeName === 'SPAN' && parentSpan !== editorCanvasRef.current && parentSpan.textContent === text) {
       Object.assign(parentSpan.style, styleObj);
+      targetSpan = parentSpan;
     } else {
       const span = document.createElement('span');
       Object.assign(span.style, styleObj);
       span.textContent = text;
       range.deleteContents();
       range.insertNode(span);
+      targetSpan = span;
     }
+
+    // Re-save range of targetSpan so spinner arrow clicks & live typing keep selection range intact
+    if (targetSpan) {
+      try {
+        const newRange = document.createRange();
+        newRange.selectNodeContents(targetSpan);
+        savedSelectionRangeRef.current = newRange.cloneRange();
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      } catch (err) { /* ignore fallback */ }
+    }
+
     handleCanvasInput();
     updateActiveToolbarState();
-    editorCanvasRef.current.focus();
   };
 
   const applyCustomWidthPt = (val) => {
@@ -1021,18 +1035,28 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 <div className="umo-toolbar-group" style={{ gap: '4px' }}>
                   <span className="umo-toolbar-label" style={{ marginRight: '2px' }}>W</span>
                   <input type="number" className={`umo-input-pt ${isTextScaled ? 'umo-input-pt-scaled' : ''}`} step="0.5" min="4" max="60"
-                    value={textWidthPt} onChange={e => setTextWidthPt(e.target.value)}
+                    value={textWidthPt}
                     onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setTextWidthPt(val);
+                      applyCustomWidthPt(val);
+                    }}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomWidthPt(textWidthPt); } }}
-                    title="Lebar Teks (pt) — Enter untuk apply" />
+                    title="Lebar Teks (pt) — Gunakan panah / ketik" />
                   <span className="umo-toolbar-label" style={{ marginLeft: '4px', marginRight: '2px' }}>H</span>
                   <input type="number" className={`umo-input-pt ${isTextScaled ? 'umo-input-pt-scaled' : ''}`} step="0.5" min="4" max="60"
-                    value={textHeightPt} onChange={e => setTextHeightPt(e.target.value)}
+                    value={textHeightPt}
                     onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setTextHeightPt(val);
+                      applyCustomHeightPt(val);
+                    }}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomHeightPt(textHeightPt); } }}
-                    title="Tinggi Teks (pt) — Enter untuk apply" />
+                    title="Tinggi Teks (pt) — Gunakan panah / ketik" />
                   {isTextScaled && (
                     <button className="umo-btn" style={{ width: '22px', height: '22px' }} onClick={handleResetTextScale} title="Reset Skala Teks ke 1.0x (Normal)">
                       <RotateCcw size={12} />
