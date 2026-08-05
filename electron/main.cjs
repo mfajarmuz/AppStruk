@@ -194,8 +194,9 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               padding: 0;
               width: ${paperWidthMm}mm;
               font-family: 'Courier New', Courier, 'Consolas', monospace;
-              font-size: 12.5pt;
-              line-height: 1.35;
+              font-size: 9.5pt;
+              line-height: 1.25;
+              letter-spacing: -0.3px;
               color: #000000;
               background: #ffffff;
               -webkit-print-color-adjust: exact;
@@ -211,8 +212,9 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               background: #ffffff !important;
               color: #000000 !important;
               font-family: 'Courier New', Courier, 'Consolas', monospace !important;
-              font-size: 12.5pt !important;
-              line-height: 1.35 !important;
+              font-size: 9.5pt !important;
+              line-height: 1.25 !important;
+              letter-spacing: -0.3px !important;
               transform: none !important;
               margin: 0 !important;
             }

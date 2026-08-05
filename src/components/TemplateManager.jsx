@@ -1306,8 +1306,9 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     onSelect={saveCurrentSelectionRange}
                     style={{
                       fontFamily: "'Courier New', Courier, monospace",
-                      fontSize: `${12.5 * zoom}px`,
-                      lineHeight: '1.35',
+                      fontSize: `${9.5 * zoom}pt`,
+                      lineHeight: '1.25',
+                      letterSpacing: '-0.3px',
                     }}
                   />
                 </div>
