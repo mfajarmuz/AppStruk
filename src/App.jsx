@@ -66,6 +66,8 @@ Operator   : {OPERATOR}
     spbuPhone: '',
     shift: '1',
     transactionNo: '6137760',
+    date: '04/08/2026',
+    time: '07:52:30',
     dateTime: '04/08/2026 07:52:30',
     fuelId: 'fuel_7',
     fuelName: 'PERTAMINA_DEX',

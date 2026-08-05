@@ -78,18 +78,22 @@ export default function ReceiptForm({
 
   const setCurrentDateTime = () => {
     const now = new Date();
-    const formatted = now.toLocaleDateString('id-ID', {
+    const formattedDate = now.toLocaleDateString('id-ID', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
-    }) + ' ' + now.toLocaleTimeString('id-ID', {
+    });
+    const formattedTime = now.toLocaleTimeString('id-ID', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'
-    });
+    }).replace(/\./g, ':');
+
     setFormData(prev => ({
       ...prev,
-      dateTime: formatted.replace(/\./g, ':')
+      date: formattedDate,
+      time: formattedTime,
+      dateTime: `${formattedDate} ${formattedTime}`
     }));
   };
 
@@ -198,23 +202,59 @@ export default function ReceiptForm({
             />
           </div>
 
-          {/* Date Time */}
+          {/* Tanggal Transaksi */}
           <div className="form-group">
             <label className="form-label">
-              <span>Waktu / Tanggal Transaksi</span>
+              <span>Tanggal Transaksi</span>
               <button
                 type="button"
                 style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.75rem' }}
                 onClick={setCurrentDateTime}
               >
-                <Clock size={12} /> Sekarang
+                <Clock size={12} /> Hari Ini
               </button>
             </label>
             <input
               type="text"
               className="form-input"
-              value={formData.dateTime}
-              onChange={e => setFormData({ ...formData, dateTime: e.target.value })}
+              value={formData.date || (formData.dateTime ? formData.dateTime.split(' ')[0] : '04/08/2026')}
+              onChange={e => {
+                const newDate = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  date: newDate,
+                  dateTime: `${newDate} ${prev.time || (prev.dateTime ? prev.dateTime.split(' ')[1] || '07:52:30' : '07:52:30')}`
+                }));
+              }}
+              placeholder="DD/MM/YYYY"
+            />
+          </div>
+
+          {/* Jam / Waktu Transaksi */}
+          <div className="form-group">
+            <label className="form-label">
+              <span>Jam / Waktu Transaksi</span>
+              <button
+                type="button"
+                style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.75rem' }}
+                onClick={setCurrentDateTime}
+              >
+                <Clock size={12} /> Jam Sekarang
+              </button>
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              value={formData.time || (formData.dateTime ? formData.dateTime.split(' ')[1] || '07:52:30' : '07:52:30')}
+              onChange={e => {
+                const newTime = e.target.value;
+                setFormData(prev => ({
+                  ...prev,
+                  time: newTime,
+                  dateTime: `${prev.date || (prev.dateTime ? prev.dateTime.split(' ')[0] || '04/08/2026' : '04/08/2026')} ${newTime}`
+                }));
+              }}
+              placeholder="HH:MM:SS"
             />
           </div>
 

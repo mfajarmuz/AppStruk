@@ -35,13 +35,19 @@ export function parseReceiptTemplate(templatePatternText, data) {
   const literDot = (parseFloat(data.liter) || 0).toFixed(2);
   const fuelFormatted = (data.fuelName || 'PERTAMINA_DEX').toUpperCase().replace(/\s+/g, '_');
 
+  const dateStr = data.date || (data.dateTime ? data.dateTime.split(' ')[0] : '04/08/2026');
+  const timeStr = data.time || (data.dateTime ? data.dateTime.split(' ')[1] || '07:52:30' : '07:52:30');
+  const dateTimeCombined = data.dateTime || `${dateStr} ${timeStr}`;
+
   return templatePatternText
     .replace(/\{NO_SPBU\}/g, data.spbuNo || '3446125')
     .replace(/\{NAMA_SPBU\}/g, (data.spbuName || 'SPBU RY SUKARAJA JENGGALA').toUpperCase())
     .replace(/\{ALAMAT\}/g, (data.spbuAddress || 'JL. RAYA SUKARAJA DS. JENGGALA').toUpperCase())
     .replace(/\{SHIFT\}/g, data.shift || '2')
     .replace(/\{NO_TRANS\}/g, data.transactionNo ? data.transactionNo.replace('STR-', '') : '6101940')
-    .replace(/\{WAKTU\}/g, data.dateTime || '21/07/2026 15:40:41')
+    .replace(/\{WAKTU\}/g, dateTimeCombined)
+    .replace(/\{TANGGAL\}/g, dateStr)
+    .replace(/\{JAM\}/g, timeStr)
     .replace(/\{POMPA\}/g, data.pumpNo || '2')
     .replace(/\{NAMA_PRODUK\}/g, fuelFormatted)
     .replace(/\{HARGA_LITER\}/g, commaPrice)
