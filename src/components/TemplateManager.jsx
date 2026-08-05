@@ -602,7 +602,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     setShowBubbleMenu(false);
   };
 
-  // ─── APPLY INLINE STYLE (Preserves All Lines, Divs, Brs, & Structure) ──────
+  // ─── APPLY INLINE STYLE (Preserves All Lines, Divs, Brs, & Applies Font to All Nodes) ──────
   const applyInlineSelectionStyle = (styleObj) => {
     if (!editorCanvasRef.current) return;
     let selection = window.getSelection();
@@ -636,11 +636,14 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
           }
           node.childNodes.forEach(applyStyleToNode);
         } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-          if (node.parentNode && node.parentNode.nodeName !== 'SPAN' && node.parentNode.nodeName !== 'DIV') {
+          const parent = node.parentNode;
+          if (parent && parent.nodeName === 'SPAN') {
+            Object.assign(parent.style, styleObj);
+          } else if (parent && parent.nodeType === Node.ELEMENT_NODE) {
             const span = document.createElement('span');
             Object.assign(span.style, styleObj);
             span.textContent = node.textContent;
-            node.parentNode.replaceChild(span, node);
+            parent.replaceChild(span, node);
           }
         }
       };
