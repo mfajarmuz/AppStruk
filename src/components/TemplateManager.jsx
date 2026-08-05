@@ -263,7 +263,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   // ─── SELECTION SAVE / RESTORE ─────────────
   const saveCurrentSelectionRange = () => {
     const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+    if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
       if (editorCanvasRef.current && editorCanvasRef.current.contains(range.commonAncestorContainer)) {
         savedSelectionRangeRef.current = range.cloneRange();
@@ -736,14 +736,39 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
-  // Restores saved selection before HTML insertion to guarantee insertion at user's cursor
+  // Restores saved selection before HTML insertion to guarantee insertion at exact user cursor position
   const insertHtmlAtCursor = (htmlStr) => {
-    if (editorCanvasRef.current) {
-      editorCanvasRef.current.focus();
-      restoreSavedSelectionRange();
+    if (!editorCanvasRef.current) return;
+    editorCanvasRef.current.focus();
+    restoreSavedSelectionRange();
+
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlStr;
+      const frag = document.createDocumentFragment();
+      let node;
+      let lastInsertedNode = null;
+      while ((node = tempDiv.firstChild)) {
+        lastInsertedNode = frag.appendChild(node);
+      }
+      range.insertNode(frag);
+
+      if (lastInsertedNode) {
+        const newRange = document.createRange();
+        newRange.setStartAfter(lastInsertedNode);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+        savedSelectionRangeRef.current = newRange.cloneRange();
+      }
+    } else {
       document.execCommand('insertHTML', false, htmlStr);
-      handleCanvasInput();
     }
+    handleCanvasInput();
   };
 
   const insertTable = (rows = 3, cols = 2) => {
@@ -1087,6 +1112,10 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <button ref={insertBtnRef}
                     className={`umo-btn ${showInsertMenu ? 'active' : ''}`}
                     style={{ width: 'auto', padding: '0 8px', gap: '4px', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      saveCurrentSelectionRange();
+                    }}
                     onClick={() => {
                       saveCurrentSelectionRange();
                       if (!showInsertMenu) updateInsertMenuPos();
@@ -1104,14 +1133,22 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   {/* Header */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 14px 8px' }}>
                     <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#202124' }}>📋 Sisipkan Elemen</span>
-                    <button className="umo-btn" style={{ width: '22px', height: '22px' }} onClick={() => setShowInsertMenu(false)}><X size={14} /></button>
+                    <button className="umo-btn" style={{ width: '22px', height: '22px' }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setShowInsertMenu(false)}><X size={14} /></button>
                   </div>
 
                   {/* Section: Garis & Tabel */}
                   <div className="umo-insert-menu-section-label">📐 Garis & Tabel</div>
-                  <button className="umo-insert-menu-item" onClick={() => { insertTable(3, 2); setShowInsertMenu(false); }}><Table size={16} /> Tabel 2 Kolom</button>
-                  <button className="umo-insert-menu-item" onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:1px dashed #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Putus-Putus (---)</button>
-                  <button className="umo-insert-menu-item" onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:2px solid #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Tebal Solid (___)</button>
+                  <button className="umo-insert-menu-item"
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => { insertTable(3, 2); setShowInsertMenu(false); }}><Table size={16} /> Tabel 2 Kolom</button>
+                  <button className="umo-insert-menu-item"
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:1px dashed #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Putus-Putus (---)</button>
+                  <button className="umo-insert-menu-item"
+                    onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                    onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:2px solid #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Tebal Solid (___)</button>
 
                   <div className="umo-insert-menu-divider" />
 
@@ -1120,6 +1157,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '4px 12px 8px' }}>
                     {SPECIAL_SYMBOLS.map(sym => (
                       <button key={sym} className="umo-symbol-chip" title={`Sisipkan ${sym}`}
+                        onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
                         onClick={() => { insertHtmlAtCursor(`<span>${sym}</span>`); setShowInsertMenu(false); }}>
                         {sym}
                       </button>
@@ -1133,6 +1171,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <div className="umo-insert-tags-grid">
                     {AVAILABLE_TAGS.map(t => (
                       <button key={t.tag} className="umo-tag-chip" title={`${t.label}: ${t.sample}`}
+                        onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
                         onClick={() => { insertHtmlAtCursor(`<span>${t.tag}</span>`); setShowInsertMenu(false); }}>
                         {t.tag}
                       </button>
