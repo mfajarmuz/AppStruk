@@ -89,15 +89,16 @@ export default function PrinterSettings({
           </div>
 
           <div className="form-group">
-            <label className="form-label">Ukuran Font Struk (px)</label>
+            <label className="form-label">Ukuran Font Struk (pt)</label>
             <select
               className="form-select"
-              value={printerSettings.fontSize || 12}
-              onChange={e => setPrinterSettings({ ...printerSettings, fontSize: parseInt(e.target.value) })}
+              value={printerSettings.fontSize || 7.5}
+              onChange={e => setPrinterSettings({ ...printerSettings, fontSize: parseFloat(e.target.value) })}
             >
-              <option value={10}>10 px (Sangat Ringkas)</option>
-              <option value={12}>12 px (Standar Clear)</option>
-              <option value={14}>14 px (Besar & Tebal)</option>
+              <option value={7.0}>7.0 pt (★ Ekstra Presisi 58mm - Muat 42 Karakter/Baris)</option>
+              <option value={7.5}>7.5 pt (★ Standar Ideal VSC-MP58X - 100% Identik Live Preview)</option>
+              <option value={8.0}>8.0 pt (Sedang - Ringkas & Clear)</option>
+              <option value={8.5}>8.5 pt (Agak Besar)</option>
             </select>
           </div>
 

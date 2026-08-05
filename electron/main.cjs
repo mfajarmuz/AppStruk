@@ -179,6 +179,8 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
     const printableWidthMm = paperWidthMm === 58 ? 48 : 72;
     const isSilent = settings?.silentPrint !== undefined ? settings.silentPrint : false;
 
+    const fontSizeVal = settings?.fontSize ? `${settings.fontSize}pt` : '7.5pt';
+
     // Standard 58mm POS thermal printer page styling HTML string wrapper
     const fullHtml = `
       <!DOCTYPE html>
@@ -195,9 +197,10 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               padding: 0;
               width: ${printableWidthMm}mm;
               font-family: 'Courier New', Courier, 'Consolas', monospace;
-              font-size: 8.5pt;
-              line-height: 1.2;
-              letter-spacing: -0.2px;
+              font-size: ${fontSizeVal};
+              font-weight: 600;
+              line-height: 1.25;
+              letter-spacing: -0.4px;
               color: #000000;
               background: #ffffff;
               -webkit-print-color-adjust: exact;
@@ -213,9 +216,10 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               background: #ffffff !important;
               color: #000000 !important;
               font-family: 'Courier New', Courier, 'Consolas', monospace !important;
-              font-size: 8.5pt !important;
-              line-height: 1.2 !important;
-              letter-spacing: -0.2px !important;
+              font-size: ${fontSizeVal} !important;
+              font-weight: 600 !important;
+              line-height: 1.25 !important;
+              letter-spacing: -0.4px !important;
               transform: none !important;
               margin: 0 !important;
               padding: 0 !important;
