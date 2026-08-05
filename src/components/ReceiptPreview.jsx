@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import { Printer, Save, Image, ZoomIn, ZoomOut, AlignLeft, AlignCenter, AlignRight, Bold } from 'lucide-react';
 
 // Exact Authentic Pertamina Logo Vector SVG
@@ -104,8 +105,27 @@ export default function ReceiptPreview({
 
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  const handleConfirmPrint = () => {
+  const handleConfirmPrint = async () => {
     setShowPreviewModal(false);
+    
+    if (receiptRef.current) {
+      try {
+        // Capture exact DOM pixels as 203 DPI crisp thermal PNG bitmap
+        const canvas = await html2canvas(receiptRef.current, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          logging: false
+        });
+        const imgUrl = canvas.toDataURL('image/png');
+        const imageHtml = `<div className="receipt-wrapper" style="width:100%; text-align:center; margin:0; padding:0; background:#fff;"><img src="${imgUrl}" style="width:100%; height:auto; display:block; margin:0 auto;" /></div>`;
+        onPrint(imageHtml);
+        return;
+      } catch (err) {
+        console.warn('html2canvas capture warning, fallback to HTML:', err);
+      }
+    }
+    
     onPrint(receiptRef.current?.outerHTML || receiptRef.current?.innerHTML);
   };
 

@@ -229,8 +229,11 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               transform-origin: left center;
             }
             img {
-              max-width: 100%;
-              height: auto;
+              max-width: 100% !important;
+              width: 100% !important;
+              height: auto !important;
+              display: block !important;
+              margin: 0 auto !important;
             }
             table {
               width: 100%;
