@@ -602,7 +602,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     setShowBubbleMenu(false);
   };
 
-  // ─── APPLY INLINE STYLE (Prevents Nested Span Bloat) ──────
+  // ─── APPLY INLINE STYLE (Preserves All Lines, Divs, Brs, & Structure) ──────
   const applyInlineSelectionStyle = (styleObj) => {
     if (!editorCanvasRef.current) return;
     let selection = window.getSelection();
@@ -619,35 +619,39 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const text = range.toString();
     if (!text) return;
 
-    let targetSpan = null;
     let parentSpan = selection.anchorNode;
     if (parentSpan && parentSpan.nodeType === Node.TEXT_NODE) parentSpan = parentSpan.parentNode;
+
+    // Single span exact selection
     if (parentSpan && parentSpan.nodeName === 'SPAN' && parentSpan !== editorCanvasRef.current && parentSpan.textContent === text) {
       Object.assign(parentSpan.style, styleObj);
-      targetSpan = parentSpan;
     } else {
-      const span = document.createElement('span');
-      Object.assign(span.style, styleObj);
-      span.textContent = text;
-      range.deleteContents();
-      range.insertNode(span);
-      targetSpan = span;
-    }
+      // Extract contents to preserve all child nodes (DIVs, BRs, SPANs, TRs, etc.)
+      const fragment = range.extractContents();
 
-    // Re-save range of targetSpan so spinner arrow clicks & live typing keep selection range intact
-    if (targetSpan) {
-      try {
-        const newRange = document.createRange();
-        newRange.selectNodeContents(targetSpan);
-        savedSelectionRangeRef.current = newRange.cloneRange();
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-      } catch (err) { /* ignore fallback */ }
+      const applyStyleToNode = (node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          if (['DIV', 'P', 'SPAN', 'TD', 'TH'].includes(node.nodeName)) {
+            Object.assign(node.style, styleObj);
+          }
+          node.childNodes.forEach(applyStyleToNode);
+        } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          if (node.parentNode && node.parentNode.nodeName !== 'SPAN' && node.parentNode.nodeName !== 'DIV') {
+            const span = document.createElement('span');
+            Object.assign(span.style, styleObj);
+            span.textContent = node.textContent;
+            node.parentNode.replaceChild(span, node);
+          }
+        }
+      };
+
+      applyStyleToNode(fragment);
+      range.insertNode(fragment);
     }
 
     handleCanvasInput();
     updateActiveToolbarState();
+    if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
   const applyCustomScalePt = (targetW, targetH) => {
