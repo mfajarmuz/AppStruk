@@ -64,11 +64,6 @@ export function parseReceiptTemplate(templatePatternText, data) {
   if (!parsed.includes('<div') && !parsed.includes('<span')) {
     const lines = parsed.split('\n');
     parsed = lines.map(line => {
-      const trimmed = line.trim();
-      // Auto convert dash lines
-      if (/^-{4,}$/.test(trimmed)) {
-        return '<div style="border-top: 1px dashed #000; margin: 5px 0; width: 100%;"></div>';
-      }
       // Auto convert 2-column spaced lines (e.g. CASH                 500,000)
       const spaceMatch = line.match(/^(\S.*?)\s{5,}(\S.*)$/);
       if (spaceMatch) {
@@ -77,9 +72,6 @@ export function parseReceiptTemplate(templatePatternText, data) {
       return `<div style="margin: 0; padding: 0;">${line || '&nbsp;'}</div>`;
     }).join('');
   }
-
-  // Always sanitize any remaining raw dash lines into clean vector borders
-  parsed = parsed.replace(/(<div[^>]*>)?\s*(-{4,})\s*(<\/div>)?/g, '<div style="border-top: 1px dashed #000; margin: 5px 0; width: 100%;"></div>');
 
   return parsed;
 }
