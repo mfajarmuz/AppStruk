@@ -2,6 +2,11 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
+// Disable GPU cache access issues on some Windows environments and enable local file ESM module loading
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+app.commandLine.appendSwitch('allow-file-access-from-files');
+
 let mainWindow;
 
 function createWindow() {
@@ -12,10 +17,12 @@ function createWindow() {
     minHeight: 700,
     title: 'Cetak Struk BBM VSC-MP58X',
     icon: path.join(__dirname, '../public/favicon.svg'),
+    show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      webSecurity: false
     }
   });
 
