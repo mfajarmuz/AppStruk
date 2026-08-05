@@ -3,7 +3,7 @@ import {
   LayoutTemplate, Plus, Edit2, Trash2, Check, FileText, Tag,
   AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, Underline, Strikethrough,
   ZoomIn, ZoomOut, Upload, ArrowLeft, MoveVertical, MoveHorizontal, Table, Minus,
-  Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save
+  Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save, X
 } from 'lucide-react';
 import { DEFAULT_TEMPLATES } from '../data/defaultTemplates';
 import { PertaminaLogoExact, parseReceiptTemplate } from './ReceiptPreview';
@@ -120,6 +120,21 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const [editorNotice, setEditorNotice] = useState('');
   const [showInsertMenu, setShowInsertMenu] = useState(false);
   const [isSaved, setIsSaved] = useState(true);
+  const insertMenuRef = useRef(null);
+  const insertBtnRef = useRef(null);
+
+  // Click-outside to close Insert Menu
+  useEffect(() => {
+    if (!showInsertMenu) return;
+    const handleClickOutside = (e) => {
+      if (insertMenuRef.current && !insertMenuRef.current.contains(e.target) &&
+          insertBtnRef.current && !insertBtnRef.current.contains(e.target)) {
+        setShowInsertMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showInsertMenu]);
 
   // Template being edited
   const [editingTemplate, setEditingTemplate] = useState({
@@ -527,7 +542,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 </div>
               </div>
 
-              {/* STATIC ACTION BAR (Google Docs Style) */}
+              {/* STATIC ACTION BAR (Google Docs Style) - Row 1: Formatting */}
               <div className="umo-toolbar">
                 {/* Group 1: Font Family */}
                 <div className="umo-toolbar-group">
@@ -556,7 +571,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <button className={`umo-btn ${activeBold ? 'active' : ''}`} onClick={() => execCmd('bold')} title="Bold (Ctrl+B)"><Bold size={15} /></button>
                   <button className={`umo-btn ${activeItalic ? 'active' : ''}`} onClick={() => execCmd('italic')} title="Italic (Ctrl+I)"><Italic size={15} /></button>
                   <button className={`umo-btn ${activeUnderline ? 'active' : ''}`} onClick={() => execCmd('underline')} title="Underline (Ctrl+U)"><Underline size={15} /></button>
-                  <button className="umo-btn" onClick={() => execCmd('strikeThrough')} title="Strikethrough"><Strikethrough size={15} /></button>
+                  <button className={`umo-btn` } onClick={() => execCmd('strikeThrough')} title="Strikethrough"><Strikethrough size={15} /></button>
                 </div>
 
                 <div className="umo-toolbar-divider" />
@@ -571,24 +586,20 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
                 <div className="umo-toolbar-divider" />
 
-                {/* Group 5: Width (pt) & Height (pt) */}
-                <div className="umo-toolbar-group" style={{ gap: '6px' }}>
-                  <div className="umo-toolbar-stack">
-                    <span className="umo-toolbar-label"><MoveHorizontal size={9} /> Lebar</span>
-                    <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
-                      value={textWidthPt} onChange={e => setTextWidthPt(e.target.value)}
-                      onFocus={saveCurrentSelectionRange}
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomWidthPt(textWidthPt); } }}
-                      title="Lebar Teks (pt)" />
-                  </div>
-                  <div className="umo-toolbar-stack">
-                    <span className="umo-toolbar-label"><MoveVertical size={9} /> Tinggi</span>
-                    <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
-                      value={textHeightPt} onChange={e => setTextHeightPt(e.target.value)}
-                      onFocus={saveCurrentSelectionRange}
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomHeightPt(textHeightPt); } }}
-                      title="Tinggi Teks (pt)" />
-                  </div>
+                {/* Group 5: Width & Height pt — inline horizontal */}
+                <div className="umo-toolbar-group" style={{ gap: '4px' }}>
+                  <span className="umo-toolbar-label" style={{ marginRight: '2px' }}>W</span>
+                  <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
+                    value={textWidthPt} onChange={e => setTextWidthPt(e.target.value)}
+                    onFocus={saveCurrentSelectionRange}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomWidthPt(textWidthPt); } }}
+                    title="Lebar Teks (pt) — Enter untuk apply" />
+                  <span className="umo-toolbar-label" style={{ marginLeft: '4px', marginRight: '2px' }}>H</span>
+                  <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
+                    value={textHeightPt} onChange={e => setTextHeightPt(e.target.value)}
+                    onFocus={saveCurrentSelectionRange}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomHeightPt(textHeightPt); } }}
+                    title="Tinggi Teks (pt) — Enter untuk apply" />
                 </div>
 
                 <div className="umo-toolbar-divider" />
@@ -609,28 +620,52 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
                 {/* Group 7: Insert Dropdown */}
                 <div className="umo-toolbar-group" style={{ position: 'relative' }}>
-                  <button className="umo-btn" style={{ width: 'auto', padding: '0 8px', gap: '4px', display: 'flex', alignItems: 'center', fontSize: '0.75rem', color: '#444746' }}
-                    onClick={() => setShowInsertMenu(v => !v)} title="Sisipkan">
+                  <button ref={insertBtnRef}
+                    className={`umo-btn ${showInsertMenu ? 'active' : ''}`}
+                    style={{ width: 'auto', padding: '0 8px', gap: '4px', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}
+                    onClick={() => setShowInsertMenu(v => !v)} title="Sisipkan elemen ke struk">
                     <Plus size={14} /> <span style={{ fontSize: '0.72rem' }}>Sisipkan</span> <ChevronDown size={12} />
                   </button>
 
                   {showInsertMenu && (
-                    <div className="umo-insert-menu" onClick={() => setShowInsertMenu(false)}>
-                      <button className="umo-insert-menu-item" onClick={() => insertTable(3, 2)}><Table size={16} /> Tabel 2 Kolom</button>
-                      <button className="umo-insert-menu-item" onClick={() => insertHtmlAtCursor('<hr style="border:none;border-top:1px dashed #000;margin:4px 0;" />')}><Minus size={16} /> Garis Putus-Putus</button>
-                      <button className="umo-insert-menu-item" onClick={() => insertHtmlAtCursor('<hr style="border:none;border-top:2px solid #000;margin:4px 0;" />')}><Minus size={16} /> Garis Tebal Solid</button>
+                    <div className="umo-insert-menu" ref={insertMenuRef}>
+                      {/* Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 12px 8px' }}>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#202124' }}>Sisipkan Elemen</span>
+                        <button className="umo-btn" style={{ width: '22px', height: '22px' }} onClick={() => setShowInsertMenu(false)}><X size={14} /></button>
+                      </div>
+
+                      {/* Section: Garis & Tabel */}
+                      <div className="umo-insert-menu-section-label">📐 Garis & Tabel</div>
+                      <button className="umo-insert-menu-item" onClick={() => { insertTable(3, 2); setShowInsertMenu(false); }}><Table size={16} /> Tabel 2 Kolom</button>
+                      <button className="umo-insert-menu-item" onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:1px dashed #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Putus-Putus (---)</button>
+                      <button className="umo-insert-menu-item" onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:2px solid #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Tebal Solid (___)</button>
+
                       <div className="umo-insert-menu-divider" />
-                      {SPECIAL_SYMBOLS.slice(0, 7).map(sym => (
-                        <button key={sym} className="umo-insert-menu-item" onClick={() => insertHtmlAtCursor(`<span>${sym}</span>`)}>
-                          <span style={{ fontSize: '1rem', width: '16px', textAlign: 'center' }}>{sym}</span> Simbol {sym}
-                        </button>
-                      ))}
+
+                      {/* Section: Simbol */}
+                      <div className="umo-insert-menu-section-label">✨ Simbol Khusus</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '4px 12px 8px' }}>
+                        {SPECIAL_SYMBOLS.map(sym => (
+                          <button key={sym} className="umo-symbol-chip" title={`Sisipkan ${sym}`}
+                            onClick={() => { insertHtmlAtCursor(`<span>${sym}</span>`); setShowInsertMenu(false); }}>
+                            {sym}
+                          </button>
+                        ))}
+                      </div>
+
                       <div className="umo-insert-menu-divider" />
-                      {AVAILABLE_TAGS.map(t => (
-                        <button key={t.tag} className="umo-insert-menu-item" onClick={() => insertHtmlAtCursor(`<span>${t.tag}</span>`)}>
-                          <Tag size={14} /> {t.tag} <span style={{ color: '#70757a', fontSize: '0.72rem', marginLeft: 'auto' }}>{t.label}</span>
-                        </button>
-                      ))}
+
+                      {/* Section: Variabel Tag */}
+                      <div className="umo-insert-menu-section-label">🏷️ Variabel Tag Template</div>
+                      <div className="umo-insert-tags-grid">
+                        {AVAILABLE_TAGS.map(t => (
+                          <button key={t.tag} className="umo-tag-chip" title={t.label}
+                            onClick={() => { insertHtmlAtCursor(`<span>${t.tag}</span>`); setShowInsertMenu(false); }}>
+                            {t.tag}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
