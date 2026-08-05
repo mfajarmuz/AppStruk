@@ -93,14 +93,14 @@ function Ruler({ widthPx, widthMm, zoom, marginMm, setPaperMarginMm }) {
 }
 
 // ─── STATUS BAR COMPONENT WITH DYNAMIC MAX CHAR COUNT ─────
-function StatusBar({ zoom, setZoom, isSaved, currentLineChars, totalLines, paperMarginMm, setPaperMarginMm }) {
+function StatusBar({ zoom, setZoom, isSaved, currentLineChars, totalLines, paperMarginMm, setPaperMarginMm, paperWidthMm = 58, paperWidthPx = 384 }) {
   const maxChars = paperMarginMm === 0 ? 32 : paperMarginMm === 2 ? 30 : 27;
   const isOverLimit = currentLineChars > maxChars;
 
   return (
     <div className="umo-statusbar">
       <div className="umo-statusbar-section">
-        <span className="umo-statusbar-item">📄 Kertas: 58mm ({PAPER_WIDTH_PX}px)</span>
+        <span className="umo-statusbar-item">📄 Kertas: {paperWidthMm}mm ({paperWidthPx}px)</span>
         <span className="umo-statusbar-item">│ Total: {totalLines} Baris</span>
         <span className={`umo-statusbar-item ${isOverLimit ? 'umo-statusbar-unsaved' : ''}`} style={{ fontWeight: isOverLimit ? 700 : 500 }}>
           │ Baris ini: {currentLineChars}/{maxChars} char {isOverLimit ? '⚠️ Limit!' : ''}
@@ -1368,6 +1368,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 zoom={zoom} setZoom={setZoom} isSaved={isSaved}
                 currentLineChars={currentLineChars} totalLines={totalLines}
                 paperMarginMm={paperMarginMm} setPaperMarginMm={setPaperMarginMm}
+                paperWidthMm={paperWidthMm} paperWidthPx={paperWidthPx}
               />
             </div>
 
@@ -1376,10 +1377,13 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               {/* Live Preview */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <EyeIcon /> Live Preview Struk 58mm
+                  <EyeIcon /> Live Preview Struk {paperWidthMm}mm
                 </div>
                 <div className="receipt-wrapper" style={{
-                  width: `${PAPER_WIDTH_PX}px`,
+                  width: `${paperWidthPx}px`,
+                  minWidth: `${paperWidthPx}px`,
+                  maxWidth: `${paperWidthPx}px`,
+                  boxSizing: 'border-box',
                   paddingLeft: `${marginPx}px`,
                   paddingRight: `${marginPx}px`,
                   margin: '0 auto',

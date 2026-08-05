@@ -167,7 +167,7 @@ export default function ReceiptPreview({
           disabled={isPrinting}
         >
           <Printer size={18} />
-          <span>{isPrinting ? 'Mencetak...' : 'Cetak Struk (58mm)'}</span>
+          <span>{isPrinting ? 'Mencetak...' : `Cetak Struk (${paperWidthMm}mm)`}</span>
         </button>
       </div>
 
@@ -223,7 +223,7 @@ export default function ReceiptPreview({
 
             {/* Printer Spec Summary */}
             <div style={{ background: 'rgba(15,23,42,0.6)', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.78rem', display: 'flex', flexDirection: 'column', gap: '4px', border: '1px solid var(--border-color)' }}>
-              <div>📄 <b>Ukuran Kertas:</b> Thermal 58mm (384px @ 203 DPI)</div>
+              <div>📄 <b>Ukuran Kertas:</b> Thermal {paperWidthMm}mm ({paperWidthPx}px @ 203 DPI)</div>
               <div>🖨️ <b>Target Printer:</b> {selectedPrinter || 'Printer Windows Standar (Dialog Cetak)'}</div>
               <div>✨ <b>Status Format:</b> Presisi 100% Sesuai Struk Fisik</div>
             </div>
