@@ -102,10 +102,10 @@ export default function ReceiptPreview({
   const currentLogoWidth = activeTemplate.logoWidth || logoWidth || 160;
   const currentLogoMarginBottom = activeTemplate.logoMarginBottom !== undefined ? activeTemplate.logoMarginBottom : -4;
   
-  const PAPER_WIDTH_PX = 384;
-  const PAPER_WIDTH_MM = 57;
+  const paperWidthMm = activeTemplate.paperWidthMm || fontSettings?.paperWidth || 58;
+  const paperWidthPx = Math.round(paperWidthMm * (384 / 58));
   const paperMarginMm = activeTemplate.paperMarginMm !== undefined ? activeTemplate.paperMarginMm : 0;
-  const marginPx = Math.round(paperMarginMm * (PAPER_WIDTH_PX / PAPER_WIDTH_MM));
+  const marginPx = Math.round(paperMarginMm * (paperWidthPx / paperWidthMm));
 
   // Parsed Text result with dynamic variables replaced
   const activeContent = activeTemplate.htmlContent || activeTemplate.pattern || templatePattern;
@@ -198,10 +198,10 @@ export default function ReceiptPreview({
               <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '0.8rem' }} onClick={() => setShowPreviewModal(false)}>✕</button>
             </div>
 
-            {/* Thermal Receipt Preview Paper Card - Fixed Uncompressed 384px Bounding Box */}
+            {/* Thermal Receipt Preview Paper Card - Dynamic Paper Width */}
             <div style={{ background: '#334155', padding: '16px 8px', borderRadius: '8px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', marginBottom: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-              <div style={{ width: '384px', minWidth: '384px', flexShrink: 0, height: 'auto', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-40px' }}>
-                <div className="receipt-wrapper" style={{ margin: '0 auto', width: '384px', minWidth: '384px', maxWidth: '384px', boxSizing: 'border-box', paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, boxShadow: '0 10px 25px rgba(0,0,0,0.6)' }}>
+              <div style={{ width: `${paperWidthPx}px`, minWidth: `${paperWidthPx}px`, flexShrink: 0, height: 'auto', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-40px' }}>
+                <div className="receipt-wrapper" style={{ margin: '0 auto', width: `${paperWidthPx}px`, minWidth: `${paperWidthPx}px`, maxWidth: `${paperWidthPx}px`, boxSizing: 'border-box', paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, boxShadow: '0 10px 25px rgba(0,0,0,0.6)' }}>
                   <div style={{ color: '#000', letterSpacing: '-0.2px' }}>
                     {activeTemplate.showLogo !== false && (
                       <div style={{ textAlign: 'center', marginBottom: `${currentLogoMarginBottom}px`, padding: 0, lineHeight: 1 }}>
@@ -302,7 +302,7 @@ export default function ReceiptPreview({
         ✏️ <b>Live Edit Langsung di Kertas Struk:</b> Klik teks di kertas untuk edit langsung!
       </div>
 
-      <div className="receipt-wrapper" ref={receiptRef} style={{ paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px` }}>
+      <div className="receipt-wrapper" ref={receiptRef} style={{ width: `${paperWidthPx}px`, minWidth: `${paperWidthPx}px`, maxWidth: `${paperWidthPx}px`, boxSizing: 'border-box', paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px` }}>
         <div style={{ color: '#000', letterSpacing: '-0.2px' }}>
           {/* Header Logo with Dynamic Bottom Margin Spacing & Zero Line Height */}
           {activeTemplate.showLogo !== false && (

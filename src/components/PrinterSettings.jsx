@@ -77,15 +77,23 @@ export default function PrinterSettings({
 
         <div className="form-grid">
           <div className="form-group">
-            <label className="form-label">Lebar Kertas Thermal (mm)</label>
-            <select
-              className="form-select"
-              value={printerSettings.paperWidth || 58}
+            <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Lebar Kertas Thermal (mm)</span>
+              <span className="text-cyan" style={{ fontWeight: 600 }}>{printerSettings.paperWidth || 58} mm</span>
+            </label>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <button type="button" className={`pill-btn ${printerSettings.paperWidth === 58 ? 'active' : ''}`} style={{ flex: 1, padding: '6px' }}
+                onClick={() => setPrinterSettings({ ...printerSettings, paperWidth: 58 })}>
+                58 mm (POS Small)
+              </button>
+              <button type="button" className={`pill-btn ${printerSettings.paperWidth === 80 ? 'active' : ''}`} style={{ flex: 1, padding: '6px' }}
+                onClick={() => setPrinterSettings({ ...printerSettings, paperWidth: 80 })}>
+                80 mm (POS Large)
+              </button>
+            </div>
+            <input type="range" min="45" max="100" step="1" value={printerSettings.paperWidth || 58}
               onChange={e => setPrinterSettings({ ...printerSettings, paperWidth: parseInt(e.target.value) })}
-            >
-              <option value={58}>58 mm (VSC-MP58X Standard)</option>
-              <option value={80}>80 mm (Printer POS Besar)</option>
-            </select>
+              style={{ width: '100%', accentColor: 'var(--accent-blue)' }} />
           </div>
 
           <div className="form-group">

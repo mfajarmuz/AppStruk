@@ -158,9 +158,10 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
 
-  // Zoom (persisted in localStorage) & Margin
+  // Zoom (persisted in localStorage) & Margin & Paper Width
   const [zoom, setZoomState] = useState(() => parseFloat(localStorage.getItem('umo_editor_zoom')) || 1.2);
   const [paperMarginMm, setPaperMarginMm] = useState(0);
+  const [paperWidthMm, setPaperWidthMm] = useState(58);
 
   const setZoom = (valueOrFn) => {
     setZoomState(prev => {
@@ -907,8 +908,9 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   // Compiled preview
   const compiledPreview = parseReceiptTemplate(editingTemplate.htmlContent || editingTemplate.pattern, formData || {});
 
-  // Margin in Px for Canvas Padding
-  const marginPx = Math.round(paperMarginMm * (PAPER_WIDTH_PX / PAPER_WIDTH_MM));
+  // Dynamic Paper Width & Margin in Px
+  const paperWidthPx = Math.round((paperWidthMm || 58) * (384 / 58));
+  const marginPx = Math.round(paperMarginMm * (paperWidthPx / (paperWidthMm || 58)));
 
   // ─── RENDER ───────────────────────────────
   return (
@@ -1288,10 +1290,10 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 )}
 
                 {/* Ruler */}
-                <Ruler widthPx={PAPER_WIDTH_PX} widthMm={PAPER_WIDTH_MM} zoom={zoom} marginMm={paperMarginMm} setPaperMarginMm={setPaperMarginMm} />
+                <Ruler widthPx={paperWidthPx} widthMm={paperWidthMm} zoom={zoom} marginMm={paperMarginMm} setPaperMarginMm={setPaperMarginMm} />
 
                 {/* Paper Canvas */}
-                <div className="umo-paper" style={{ width: `${PAPER_WIDTH_PX * zoom}px`, paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, transform: `scale(1)`, transformOrigin: 'top center' }}>
+                <div className="umo-paper" style={{ width: `${paperWidthPx * zoom}px`, minWidth: `${paperWidthPx * zoom}px`, paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, transform: `scale(1)`, transformOrigin: 'top center' }}>
                   <div
                     ref={editorCanvasRef}
                     className="umo-paper-editable"
@@ -1380,6 +1382,44 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <input type="range" min="-20" max="40" step="2" value={editingTemplate.logoMarginBottom !== undefined ? editingTemplate.logoMarginBottom : -4}
                     onChange={e => setEditingTemplate(prev => ({ ...prev, logoMarginBottom: parseInt(e.target.value) }))}
                     style={{ width: '100%', accentColor: 'var(--accent-emerald)' }} />
+                </div>
+
+                {/* Lebar Kertas Struk Control */}
+                <div className="form-group" style={{ marginBottom: '12px', background: 'rgba(15,23,42,0.5)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--accent-blue)' }}>
+                    <span>🖨️ Lebar Kertas Struk ({paperWidthMm}mm)</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      {paperWidthMm}mm ({paperWidthPx}px @ 203 DPI)
+                    </span>
+                  </label>
+                  
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                    <button type="button" className={`pill-btn ${paperWidthMm === 58 ? 'active' : ''}`} style={{ flex: 1, padding: '4px 6px', fontSize: '0.72rem' }}
+                      onClick={() => {
+                        setPaperWidthMm(58);
+                        setEditingTemplate(prev => ({ ...prev, paperWidthMm: 58 }));
+                        setIsSaved(false);
+                      }}>
+                      58mm (POS Small)
+                    </button>
+                    <button type="button" className={`pill-btn ${paperWidthMm === 80 ? 'active' : ''}`} style={{ flex: 1, padding: '4px 6px', fontSize: '0.72rem' }}
+                      onClick={() => {
+                        setPaperWidthMm(80);
+                        setEditingTemplate(prev => ({ ...prev, paperWidthMm: 80 }));
+                        setIsSaved(false);
+                      }}>
+                      80mm (POS Large)
+                    </button>
+                  </div>
+
+                  <input type="range" min="45" max="100" step="1" value={paperWidthMm}
+                    onChange={e => {
+                      const val = parseInt(e.target.value);
+                      setPaperWidthMm(val);
+                      setEditingTemplate(prev => ({ ...prev, paperWidthMm: val }));
+                      setIsSaved(false);
+                    }}
+                    style={{ width: '100%', accentColor: 'var(--accent-blue)' }} />
                 </div>
 
                 {/* Margin Kertas Struk Control */}
