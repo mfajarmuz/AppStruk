@@ -636,18 +636,27 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     updateActiveToolbarState();
   };
 
-  const applyCustomWidthPt = (val) => {
+  const applyCustomScalePt = (targetW, targetH) => {
     restoreSavedSelectionRange();
-    const n = parseFloat(val); if (isNaN(n) || n <= 0) return;
+    const w = parseFloat(targetW);
+    const h = parseFloat(targetH);
+    if (isNaN(w) || w <= 0 || isNaN(h) || h <= 0) return;
     const base = parseFloat(activeFontSize) || 12.5;
-    applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleX(${(n / base).toFixed(3)})`, letterSpacing: '0.5px' });
+    const scX = (w / base).toFixed(3);
+    const scY = (h / base).toFixed(3);
+    applyInlineSelectionStyle({
+      display: 'inline-block',
+      transform: `scale(${scX}, ${scY})`,
+      letterSpacing: parseFloat(scX) > 1 ? '0.5px' : 'normal'
+    });
+  };
+
+  const applyCustomWidthPt = (val) => {
+    applyCustomScalePt(val, textHeightPt);
   };
 
   const applyCustomHeightPt = (val) => {
-    restoreSavedSelectionRange();
-    const n = parseFloat(val); if (isNaN(n) || n <= 0) return;
-    const base = parseFloat(activeFontSize) || 12.5;
-    applyInlineSelectionStyle({ display: 'inline-block', transform: `scaleY(${(n / base).toFixed(3)})` });
+    applyCustomScalePt(textWidthPt, val);
   };
 
   // Reset Scale (1.0x / 100% normal)
