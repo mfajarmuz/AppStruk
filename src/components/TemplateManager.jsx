@@ -122,6 +122,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const [isSaved, setIsSaved] = useState(true);
   const insertMenuRef = useRef(null);
   const insertBtnRef = useRef(null);
+  const [insertMenuPos, setInsertMenuPos] = useState({ top: 0, left: 0 });
 
   // Click-outside to close Insert Menu
   useEffect(() => {
@@ -619,57 +620,65 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 <div className="umo-toolbar-divider" />
 
                 {/* Group 7: Insert Dropdown */}
-                <div className="umo-toolbar-group" style={{ position: 'relative' }}>
+                <div className="umo-toolbar-group">
                   <button ref={insertBtnRef}
                     className={`umo-btn ${showInsertMenu ? 'active' : ''}`}
                     style={{ width: 'auto', padding: '0 8px', gap: '4px', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}
-                    onClick={() => setShowInsertMenu(v => !v)} title="Sisipkan elemen ke struk">
+                    onClick={() => {
+                      if (!showInsertMenu && insertBtnRef.current) {
+                        const rect = insertBtnRef.current.getBoundingClientRect();
+                        setInsertMenuPos({ top: rect.bottom + 4, left: Math.max(8, rect.right - 320) });
+                      }
+                      setShowInsertMenu(v => !v);
+                    }} title="Sisipkan elemen ke struk">
                     <Plus size={14} /> <span style={{ fontSize: '0.72rem' }}>Sisipkan</span> <ChevronDown size={12} />
                   </button>
-
-                  {showInsertMenu && (
-                    <div className="umo-insert-menu" ref={insertMenuRef}>
-                      {/* Header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 12px 8px' }}>
-                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#202124' }}>Sisipkan Elemen</span>
-                        <button className="umo-btn" style={{ width: '22px', height: '22px' }} onClick={() => setShowInsertMenu(false)}><X size={14} /></button>
-                      </div>
-
-                      {/* Section: Garis & Tabel */}
-                      <div className="umo-insert-menu-section-label">📐 Garis & Tabel</div>
-                      <button className="umo-insert-menu-item" onClick={() => { insertTable(3, 2); setShowInsertMenu(false); }}><Table size={16} /> Tabel 2 Kolom</button>
-                      <button className="umo-insert-menu-item" onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:1px dashed #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Putus-Putus (---)</button>
-                      <button className="umo-insert-menu-item" onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:2px solid #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Tebal Solid (___)</button>
-
-                      <div className="umo-insert-menu-divider" />
-
-                      {/* Section: Simbol */}
-                      <div className="umo-insert-menu-section-label">✨ Simbol Khusus</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '4px 12px 8px' }}>
-                        {SPECIAL_SYMBOLS.map(sym => (
-                          <button key={sym} className="umo-symbol-chip" title={`Sisipkan ${sym}`}
-                            onClick={() => { insertHtmlAtCursor(`<span>${sym}</span>`); setShowInsertMenu(false); }}>
-                            {sym}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className="umo-insert-menu-divider" />
-
-                      {/* Section: Variabel Tag */}
-                      <div className="umo-insert-menu-section-label">🏷️ Variabel Tag Template</div>
-                      <div className="umo-insert-tags-grid">
-                        {AVAILABLE_TAGS.map(t => (
-                          <button key={t.tag} className="umo-tag-chip" title={t.label}
-                            onClick={() => { insertHtmlAtCursor(`<span>${t.tag}</span>`); setShowInsertMenu(false); }}>
-                            {t.tag}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
+
+              {/* INSERT MENU (fixed position, outside overflow container) */}
+              {showInsertMenu && (
+                <div className="umo-insert-menu-fixed" ref={insertMenuRef}
+                  style={{ top: `${insertMenuPos.top}px`, left: `${insertMenuPos.left}px` }}>
+                  {/* Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 14px 8px' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#202124' }}>📋 Sisipkan Elemen</span>
+                    <button className="umo-btn" style={{ width: '22px', height: '22px' }} onClick={() => setShowInsertMenu(false)}><X size={14} /></button>
+                  </div>
+
+                  {/* Section: Garis & Tabel */}
+                  <div className="umo-insert-menu-section-label">📐 Garis & Tabel</div>
+                  <button className="umo-insert-menu-item" onClick={() => { insertTable(3, 2); setShowInsertMenu(false); }}><Table size={16} /> Tabel 2 Kolom</button>
+                  <button className="umo-insert-menu-item" onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:1px dashed #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Putus-Putus (---)</button>
+                  <button className="umo-insert-menu-item" onClick={() => { insertHtmlAtCursor('<hr style="border:none;border-top:2px solid #000;margin:4px 0;" />'); setShowInsertMenu(false); }}><Minus size={16} /> Garis Tebal Solid (___)</button>
+
+                  <div className="umo-insert-menu-divider" />
+
+                  {/* Section: Simbol */}
+                  <div className="umo-insert-menu-section-label">✨ Simbol Khusus</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '4px 12px 8px' }}>
+                    {SPECIAL_SYMBOLS.map(sym => (
+                      <button key={sym} className="umo-symbol-chip" title={`Sisipkan ${sym}`}
+                        onClick={() => { insertHtmlAtCursor(`<span>${sym}</span>`); setShowInsertMenu(false); }}>
+                        {sym}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="umo-insert-menu-divider" />
+
+                  {/* Section: Variabel Tag */}
+                  <div className="umo-insert-menu-section-label">🏷️ Variabel Tag Template</div>
+                  <div className="umo-insert-tags-grid">
+                    {AVAILABLE_TAGS.map(t => (
+                      <button key={t.tag} className="umo-tag-chip" title={t.label}
+                        onClick={() => { insertHtmlAtCursor(`<span>${t.tag}</span>`); setShowInsertMenu(false); }}>
+                        {t.tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* NON-BLOCKING NOTICE */}
               {editorNotice && (
