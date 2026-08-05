@@ -417,34 +417,22 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       return;
     }
 
-    // Prevent Enter cloning scaled spans to new lines
+    // Prevent Enter cloning scaled spans to new lines & ensure clean line breaks
     if (e.key === 'Enter') {
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         let spanNode = selection.anchorNode;
-        while (spanNode && spanNode !== editorCanvasRef.current && spanNode.nodeName !== 'SPAN') {
-          spanNode = spanNode.parentNode;
-        }
-        if (spanNode && spanNode.style && spanNode.style.transform && spanNode.style.transform !== 'none') {
+        if (spanNode && spanNode.nodeType === Node.TEXT_NODE) spanNode = spanNode.parentNode;
+
+        // If inside a scaled span (transform), insert a clean unscaled line break
+        if (spanNode && spanNode.nodeName === 'SPAN' && spanNode.style && spanNode.style.transform && spanNode.style.transform !== 'none') {
           e.preventDefault();
-          let pNode = spanNode;
-          while (pNode && pNode !== editorCanvasRef.current && pNode.nodeName !== 'DIV' && pNode.nodeName !== 'P') {
-            pNode = pNode.parentNode;
-          }
-          const newDiv = document.createElement('div');
-          newDiv.innerHTML = '<br>';
-          if (pNode && pNode.parentNode) {
-            pNode.parentNode.insertBefore(newDiv, pNode.nextSibling);
-            const range = document.createRange();
-            range.setStart(newDiv, 0);
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-            handleCanvasInput();
-            return;
-          }
+          document.execCommand('insertHTML', false, '<div><br></div>');
+          handleCanvasInput();
+          return;
         }
       }
+      // For all other cases, allow standard browser Enter line break!
     }
 
     // Table Tab Navigation
