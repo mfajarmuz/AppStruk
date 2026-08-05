@@ -101,6 +101,11 @@ export default function ReceiptPreview({
 
   const currentLogoWidth = activeTemplate.logoWidth || logoWidth || 160;
   const currentLogoMarginBottom = activeTemplate.logoMarginBottom !== undefined ? activeTemplate.logoMarginBottom : -4;
+  
+  const PAPER_WIDTH_PX = 384;
+  const PAPER_WIDTH_MM = 57;
+  const paperMarginMm = activeTemplate.paperMarginMm !== undefined ? activeTemplate.paperMarginMm : 0;
+  const marginPx = Math.round(paperMarginMm * (PAPER_WIDTH_PX / PAPER_WIDTH_MM));
 
   // Parsed Text result with dynamic variables replaced
   const activeContent = activeTemplate.htmlContent || activeTemplate.pattern || templatePattern;
@@ -195,7 +200,7 @@ export default function ReceiptPreview({
 
             {/* Thermal Receipt Preview Paper Card */}
             <div style={{ background: '#334155', padding: '16px', borderRadius: '8px', display: 'flex', justifyContent: 'center', marginBottom: '16px', border: '1px solid var(--border-color)' }}>
-              <div className="receipt-wrapper" style={{ margin: 0, width: '384px', transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-30px', boxShadow: '0 10px 25px rgba(0,0,0,0.6)' }}>
+              <div className="receipt-wrapper" style={{ margin: 0, width: '384px', paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px`, transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: '-30px', boxShadow: '0 10px 25px rgba(0,0,0,0.6)' }}>
                 <div style={{ color: '#000', letterSpacing: '-0.2px' }}>
                   {activeTemplate.showLogo !== false && (
                     <div style={{ textAlign: 'center', marginBottom: `${currentLogoMarginBottom}px`, padding: 0, lineHeight: 1 }}>
@@ -299,7 +304,7 @@ export default function ReceiptPreview({
         ✏️ <b>Live Edit Langsung di Kertas Struk:</b> Klik teks di kertas untuk edit langsung!
       </div>
 
-      <div className="receipt-wrapper" ref={receiptRef}>
+      <div className="receipt-wrapper" ref={receiptRef} style={{ paddingLeft: `${marginPx}px`, paddingRight: `${marginPx}px` }}>
         <div style={{ color: '#000', letterSpacing: '-0.2px' }}>
           {/* Header Logo with Dynamic Bottom Margin Spacing & Zero Line Height */}
           {activeTemplate.showLogo !== false && (
