@@ -91,6 +91,21 @@ function createWindow() {
     mainWindow.loadURL('http://localhost:5173');
   }
 
+  // Enable F12 key to toggle DevTools if needed
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' && input.type === 'keyDown') {
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
+
+  mainWindow.webContents.on('crashed', (e) => {
+    console.error('Electron webContents crashed:', e);
+  });
+
+  mainWindow.webContents.on('did-fail-load', (e, errorCode, errorDescription) => {
+    console.error('Electron did-fail-load:', errorCode, errorDescription);
+  });
+
   // Force window focus on launch
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
