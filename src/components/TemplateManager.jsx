@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  LayoutTemplate, Plus, Edit2, Trash2, Check, FileText, Tag,
+  LayoutTemplate, Plus, Edit2, Trash2, Check, FileText, Tag, Search,
   AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, Underline, Strikethrough,
   ZoomIn, ZoomOut, Upload, ArrowLeft, MoveVertical, MoveHorizontal, Table, Minus,
   Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save, X, AlertCircle, CheckCircle2, RotateCcw
@@ -84,7 +84,7 @@ function Ruler({ widthPx, widthMm, zoom, marginMm }) {
 }
 
 // ─── STATUS BAR COMPONENT WITH DYNAMIC MAX CHAR COUNT ─────
-function StatusBar({ zoom, setZoom, isSaved, currentLineChars, paperMarginMm, setPaperMarginMm }) {
+function StatusBar({ zoom, setZoom, isSaved, currentLineChars, totalLines, paperMarginMm, setPaperMarginMm }) {
   const maxChars = paperMarginMm === 0 ? 32 : paperMarginMm === 2 ? 30 : 27;
   const isOverLimit = currentLineChars > maxChars;
 
@@ -92,6 +92,7 @@ function StatusBar({ zoom, setZoom, isSaved, currentLineChars, paperMarginMm, se
     <div className="umo-statusbar">
       <div className="umo-statusbar-section">
         <span className="umo-statusbar-item">📄 Kertas: 58mm ({PAPER_WIDTH_PX}px)</span>
+        <span className="umo-statusbar-item">│ Total: {totalLines} Baris</span>
         <span className={`umo-statusbar-item ${isOverLimit ? 'umo-statusbar-unsaved' : ''}`} style={{ fontWeight: isOverLimit ? 700 : 500 }}>
           │ Baris ini: {currentLineChars}/{maxChars} char {isOverLimit ? '⚠️ Limit!' : ''}
         </span>
@@ -138,10 +139,22 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const canvasContainerRef = useRef(null);
   const savedSelectionRangeRef = useRef(null);
   const historyDebounceRef = useRef(null);
+  const noticeTimeoutRef = useRef(null);
 
-  // Zoom & Margin
-  const [zoom, setZoom] = useState(1.2);
+  // Gallery Search Query
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Zoom (persisted in localStorage) & Margin
+  const [zoom, setZoomState] = useState(() => parseFloat(localStorage.getItem('umo_editor_zoom')) || 1.2);
   const [paperMarginMm, setPaperMarginMm] = useState(0);
+
+  const setZoom = (valueOrFn) => {
+    setZoomState(prev => {
+      const next = typeof valueOrFn === 'function' ? valueOrFn(prev) : valueOrFn;
+      localStorage.setItem('umo_editor_zoom', next.toString());
+      return next;
+    });
+  };
 
   // Live Detected Formatting State
   const [activeFontFamily, setActiveFontFamily] = useState('');
@@ -155,6 +168,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const [textWidthPt, setTextWidthPt] = useState('12.5');
   const [textHeightPt, setTextHeightPt] = useState('12.5');
   const [currentLineChars, setCurrentLineChars] = useState(0);
+  const [totalLines, setTotalLines] = useState(1);
 
   // Non-blocking notices & insert menu
   const [editorNotice, setEditorNotice] = useState('');
@@ -165,6 +179,13 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const insertBtnRef = useRef(null);
   const [insertMenuPos, setInsertMenuPos] = useState({ top: 0, left: 0 });
 
+  // Safe Non-blocking Notice Dispatcher (clears pending timeouts)
+  const showNotice = (msg, duration = 3500) => {
+    if (noticeTimeoutRef.current) clearTimeout(noticeTimeoutRef.current);
+    setEditorNotice(msg);
+    noticeTimeoutRef.current = setTimeout(() => setEditorNotice(''), duration);
+  };
+
   // Recalculate Insert Menu Position
   const updateInsertMenuPos = useCallback(() => {
     if (insertBtnRef.current) {
@@ -173,11 +194,16 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     }
   }, []);
 
-  // Click-outside & Scroll/Resize listener to close Insert Menu
+  // Click-outside, Escape key, & Scroll/Resize listener to close menus
   useEffect(() => {
-    if (!showInsertMenu) return;
+    const handleKeyDownGlobal = (e) => {
+      if (e.key === 'Escape') {
+        setShowInsertMenu(false);
+        setShowBubbleMenu(false);
+      }
+    };
     const handleClickOutside = (e) => {
-      if (insertMenuRef.current && !insertMenuRef.current.contains(e.target) &&
+      if (showInsertMenu && insertMenuRef.current && !insertMenuRef.current.contains(e.target) &&
           insertBtnRef.current && !insertBtnRef.current.contains(e.target)) {
         setShowInsertMenu(false);
       }
@@ -185,10 +211,12 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     const handleScrollOrResize = () => {
       setShowInsertMenu(false);
     };
+    document.addEventListener('keydown', handleKeyDownGlobal);
     document.addEventListener('mousedown', handleClickOutside);
     window.addEventListener('scroll', handleScrollOrResize, true);
     window.addEventListener('resize', handleScrollOrResize);
     return () => {
+      document.removeEventListener('keydown', handleKeyDownGlobal);
       document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('scroll', handleScrollOrResize, true);
       window.removeEventListener('resize', handleScrollOrResize);
@@ -245,6 +273,21 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     } catch { return false; }
   };
 
+  // Restore Caret to End of Canvas on Undo/Redo
+  const restoreCanvasCaret = () => {
+    if (editorCanvasRef.current) {
+      editorCanvasRef.current.focus();
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(editorCanvasRef.current);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } catch (err) { /* ignore fallback */ }
+    }
+  };
+
   // ─── UNDO / REDO ──────────────────────────
   const handleUndo = () => {
     if (historyIndex > 0) {
@@ -254,6 +297,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
         editorCanvasRef.current.innerHTML = targetHtml;
         setEditingTemplate(prev => ({ ...prev, htmlContent: targetHtml, pattern: editorCanvasRef.current.innerText }));
         setHistoryIndex(newIndex);
+        restoreCanvasCaret();
       }
     } else { document.execCommand('undo', false, null); handleCanvasInput(); }
   };
@@ -266,6 +310,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
         editorCanvasRef.current.innerHTML = targetHtml;
         setEditingTemplate(prev => ({ ...prev, htmlContent: targetHtml, pattern: editorCanvasRef.current.innerText }));
         setHistoryIndex(newIndex);
+        restoreCanvasCaret();
       }
     } else { document.execCommand('redo', false, null); handleCanvasInput(); }
   };
@@ -278,6 +323,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       setHistoryStack([initialHtml]);
       setHistoryIndex(0);
       setIsSaved(true);
+      updateActiveToolbarState();
     }
   }, [editorActive]);
 
@@ -303,15 +349,28 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       setEditingTemplate(prev => ({ ...prev, htmlContent: html, pattern: text }));
       pushHistorySnapshot(html);
       setIsSaved(false);
+
+      // Count total lines
+      const lineCount = editorCanvasRef.current.querySelectorAll('div, p').length || 1;
+      setTotalLines(lineCount);
     }
   };
 
-  // ─── PASTE SANITIZATION ───────────────────
+  // ─── PASTE SANITIZATION (Supports internal Umo Editor HTML) ──
   const handlePaste = (e) => {
     e.preventDefault();
-    let text = e.clipboardData.getData('text/plain') || '';
-    text = text.replace(/[^\S\n]+/g, ' ').replace(/\r\n/g, '\n');
-    document.execCommand('insertText', false, text);
+    const html = e.clipboardData.getData('text/html');
+    const text = e.clipboardData.getData('text/plain') || '';
+
+    if (html && (html.includes('style="') || html.includes('{'))) {
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      temp.querySelectorAll('script, iframe, style, link').forEach(el => el.remove());
+      document.execCommand('insertHTML', false, temp.innerHTML);
+    } else {
+      const cleanText = text.replace(/[^\S\n]+/g, ' ').replace(/\r\n/g, '\n');
+      document.execCommand('insertText', false, cleanText);
+    }
     handleCanvasInput();
   };
 
@@ -319,6 +378,19 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const handleEditorKeyDown = (e) => {
     const isCtrl = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
+
+    // Ctrl+A Select All Canvas Only
+    if (isCtrl && key === 'a') {
+      e.preventDefault();
+      if (editorCanvasRef.current) {
+        const range = document.createRange();
+        range.selectNodeContents(editorCanvasRef.current);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      return;
+    }
 
     // Table Tab Navigation
     if (e.key === 'Tab') {
@@ -342,7 +414,6 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               selection.removeAllRanges();
               selection.addRange(range);
             } else if (!e.shiftKey && targetIdx >= cells.length) {
-              // Add new row to table automatically when pressing Tab on last cell
               const tr = document.createElement('tr');
               const colCount = cell.parentElement.children.length;
               for (let c = 0; c < colCount; c++) {
@@ -396,13 +467,14 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     let node = selection.anchorNode;
     if (!node) return;
 
-    // Detect current line character count
+    // Detect current line character count & line element
     let lineNode = node;
     while (lineNode && lineNode !== editorCanvasRef.current && lineNode.nodeName !== 'DIV' && lineNode.nodeName !== 'P') {
       lineNode = lineNode.parentNode;
     }
     if (lineNode && lineNode !== editorCanvasRef.current) {
-      setCurrentLineChars(lineNode.innerText ? lineNode.innerText.replace(/\n/g, '').length : 0);
+      const lineLen = lineNode.innerText ? lineNode.innerText.replace(/\n/g, '').length : 0;
+      setCurrentLineChars(lineLen);
     }
 
     if (node.nodeType === Node.TEXT_NODE) node = node.parentNode;
@@ -480,8 +552,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       if (restoreSavedSelectionRange()) selection = window.getSelection();
     }
     if (!selection || !selection.rangeCount || selection.isCollapsed) {
-      setEditorNotice('💡 Blok/sorot teks terlebih dulu untuk mengubah format!');
-      setTimeout(() => setEditorNotice(''), 3000);
+      showNotice('💡 Blok/sorot teks terlebih dulu untuk mengubah format!');
       editorCanvasRef.current.focus();
       return;
     }
@@ -531,7 +602,6 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
-  // Restores saved selection before HTML insertion to guarantee insertion at user's cursor
   const insertHtmlAtCursor = (htmlStr) => {
     if (editorCanvasRef.current) {
       editorCanvasRef.current.focus();
@@ -571,8 +641,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
   const handleSaveTemplate = () => {
     if (!editingTemplate.name.trim()) {
-      setEditorNotice('⚠️ Nama template tidak boleh kosong!');
-      setTimeout(() => setEditorNotice(''), 3500);
+      showNotice('⚠️ Nama template tidak boleh kosong!');
       return;
     }
     const currentHtml = editorCanvasRef.current ? editorCanvasRef.current.innerHTML : editingTemplate.htmlContent;
@@ -583,8 +652,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
       return exists ? prev.map(t => t.id === saved.id ? saved : t) : [...prev, saved];
     });
     setIsSaved(true);
-    setEditorNotice('✓ Template berhasil disimpan!');
-    setTimeout(() => setEditorNotice(''), 3500);
+    showNotice('✓ Template berhasil disimpan!');
   };
 
   const handleDeleteTemplate = (id) => {
@@ -613,6 +681,13 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     dynamicSizeOptions.unshift({ value: activeFontSize, label: `${activeFontSize} (Custom)` });
   }
 
+  // Filter templates in Gallery View
+  const filteredTemplates = templates.filter(t =>
+    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (t.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (t.badge || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Compiled preview
   const compiledPreview = parseReceiptTemplate(editingTemplate.htmlContent || editingTemplate.pattern, formData || {});
 
@@ -631,10 +706,23 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 <LayoutTemplate size={22} className="text-blue" />
                 <span>Galeri Template Struk Saya</span>
               </div>
-              <button className="btn btn-primary btn-lg" onClick={handleCreateNewTemplate}
-                style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', boxShadow: '0 4px 15px rgba(37,99,235,0.4)' }}>
-                <Plus size={20} /> + Template Baru
-              </button>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ position: 'relative' }}>
+                  <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ paddingLeft: '32px', width: '200px', height: '38px', fontSize: '0.82rem' }}
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Cari template..."
+                  />
+                </div>
+                <button className="btn btn-primary btn-lg" onClick={handleCreateNewTemplate}
+                  style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', boxShadow: '0 4px 15px rgba(37,99,235,0.4)' }}>
+                  <Plus size={20} /> + Template Baru
+                </button>
+              </div>
             </div>
           </div>
 
@@ -645,7 +733,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
           )}
 
           <div className="template-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
-            {templates.map(tpl => {
+            {filteredTemplates.map(tpl => {
               const sample = parseReceiptTemplate(tpl.htmlContent || tpl.pattern, formData || {});
               const mb = tpl.logoMarginBottom !== undefined ? tpl.logoMarginBottom : -4;
               const isOfficial = tpl.badge === 'Official' || (!tpl.id.startsWith('custom_') && !tpl.id.startsWith('default_custom'));
@@ -909,7 +997,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               {/* STATUS BAR */}
               <StatusBar
                 zoom={zoom} setZoom={setZoom} isSaved={isSaved}
-                currentLineChars={currentLineChars}
+                currentLineChars={currentLineChars} totalLines={totalLines}
                 paperMarginMm={paperMarginMm} setPaperMarginMm={setPaperMarginMm}
               />
             </div>

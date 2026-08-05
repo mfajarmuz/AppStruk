@@ -86,10 +86,13 @@ export default function ReceiptPreview({
     }
   };
 
-  // Sync user direct edits on paper preview back to template pattern
+  // Sync user direct edits on paper preview back to template pattern safely
   const handleDirectInlineEdit = (e) => {
     const text = e.target.innerText;
-    setTemplatePattern(text);
+    // Only update if template pattern is raw text (doesn't contain structured template tags)
+    if (!activeTemplate.htmlContent) {
+      setTemplatePattern(text);
+    }
   };
 
   return (
