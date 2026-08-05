@@ -1002,26 +1002,38 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               const mb = tpl.logoMarginBottom !== undefined ? tpl.logoMarginBottom : -4;
               const isOfficial = tpl.badge === 'Official' || (!tpl.id.startsWith('custom_') && !tpl.id.startsWith('default_custom'));
               return (
-                <div key={tpl.id} className="template-card" style={{ padding: '20px', background: 'rgba(15,23,42,0.7)' }}>
-                  <span className="template-badge" style={{
-                    background: isOfficial ? 'rgba(16, 185, 129, 0.2)' : 'rgba(6, 182, 212, 0.2)',
-                    color: isOfficial ? 'var(--accent-emerald)' : 'var(--accent-cyan)',
-                    border: `1px solid ${isOfficial ? 'rgba(16, 185, 129, 0.3)' : 'rgba(6, 182, 212, 0.3)'}`
-                  }}>
-                    {tpl.badge || 'Template'}
-                  </span>
-                  <div style={{ marginBottom: '12px' }}>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>{tpl.name}</h3>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{tpl.description}</p>
-                  </div>
-                  <div style={{ background: '#fff', color: '#000', padding: '12px', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', fontFamily: "'Courier New', monospace", fontSize: '10px', lineHeight: '1.3', maxHeight: '160px', overflow: 'hidden', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
-                    <div style={{ textAlign: 'center', marginBottom: `${mb}px`, padding: 0, lineHeight: 1 }}>
-                      {tpl.customLogoUrl ? <img src={tpl.customLogoUrl} alt="Logo" style={{ maxHeight: '24px', maxWidth: '100px', display: 'inline-block' }} />
-                        : <div style={{ display: 'flex', justifyContent: 'center' }}><PertaminaLogoExact width={90} height={26} /></div>}
+                <div key={tpl.id} className="template-card" style={{ padding: '16px', background: 'rgba(15,23,42,0.7)', borderRadius: '12px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                      <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)', margin: 0, lineHeight: 1.3 }}>{tpl.name}</h3>
+                      <span className="template-badge" style={{
+                        position: 'static', flexShrink: 0,
+                        background: isOfficial ? 'rgba(16, 185, 129, 0.2)' : 'rgba(6, 182, 212, 0.2)',
+                        color: isOfficial ? 'var(--accent-emerald)' : 'var(--accent-cyan)',
+                        border: `1px solid ${isOfficial ? 'rgba(16, 185, 129, 0.3)' : 'rgba(6, 182, 212, 0.3)'}`,
+                        padding: '2px 8px', fontSize: '0.72rem', borderRadius: '12px', whiteSpace: 'nowrap'
+                      }}>
+                        {tpl.badge || 'Template'}
+                      </span>
                     </div>
-                    {tpl.htmlContent ? <div dangerouslySetInnerHTML={{ __html: sample }} /> : <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{sample || tpl.pattern || 'Sample...'}</div>}
+                    <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.4 }}>{tpl.description}</p>
+
+                    {/* Full Receipt Miniature Preview Box */}
+                    <div style={{
+                      background: '#fff', color: '#000', padding: '10px 8px', borderRadius: '6px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)', fontFamily: "'Courier New', monospace",
+                      fontSize: '8.5px', lineHeight: '1.2', maxHeight: '280px', overflowY: 'auto',
+                      marginBottom: '16px', border: '1px solid #cbd5e1'
+                    }}>
+                      <div style={{ textAlign: 'center', marginBottom: `${mb}px`, padding: 0, lineHeight: 1 }}>
+                        {tpl.customLogoUrl ? <img src={tpl.customLogoUrl} alt="Logo" style={{ maxHeight: '22px', maxWidth: '90px', display: 'inline-block' }} />
+                          : <div style={{ display: 'flex', justifyContent: 'center' }}><PertaminaLogoExact width={80} height={24} /></div>}
+                      </div>
+                      {tpl.htmlContent ? <div dangerouslySetInnerHTML={{ __html: sample }} /> : <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{sample || tpl.pattern || 'Sample...'}</div>}
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
+
+                  <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
                     <button className="btn btn-primary" style={{ flex: 1, padding: '8px 12px', fontSize: '0.85rem' }}
                       onClick={() => {
                         onSelectTemplate(tpl.id, tpl);
