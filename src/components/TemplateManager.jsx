@@ -3,7 +3,7 @@ import {
   LayoutTemplate, Plus, Edit2, Trash2, Check, FileText, Tag,
   AlignLeft, AlignCenter, AlignRight, AlignJustify, Bold, Italic, Underline, Strikethrough,
   ZoomIn, ZoomOut, Upload, ArrowLeft, MoveVertical, MoveHorizontal, Table, Minus,
-  Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save, X, AlertCircle, CheckCircle2
+  Undo2, Redo2, Info, ChevronDown, Type, Image, Scissors, Save, X, AlertCircle, CheckCircle2, RotateCcw
 } from 'lucide-react';
 import { DEFAULT_TEMPLATES } from '../data/defaultTemplates';
 import { PertaminaLogoExact, parseReceiptTemplate } from './ReceiptPreview';
@@ -11,7 +11,6 @@ import { PertaminaLogoExact, parseReceiptTemplate } from './ReceiptPreview';
 // ─── CONSTANTS ────────────────────────────────────────────
 const PAPER_WIDTH_PX = 384; // 58mm at 203 DPI thermal printer
 const PAPER_WIDTH_MM = 57;
-const MAX_CHARS_PER_LINE = 32;
 const HISTORY_MAX = 100;
 const HISTORY_DEBOUNCE_MS = 400;
 
@@ -34,14 +33,21 @@ const SIZE_OPTIONS = [
 ];
 
 const AVAILABLE_TAGS = [
-  { tag: '{NO_SPBU}', label: 'No SPBU' }, { tag: '{NAMA_SPBU}', label: 'Nama SPBU' },
-  { tag: '{ALAMAT}', label: 'Alamat' }, { tag: '{SHIFT}', label: 'Shift' },
-  { tag: '{NO_TRANS}', label: 'No. Transaksi' }, { tag: '{WAKTU}', label: 'Waktu' },
-  { tag: '{POMPA}', label: 'Pompa' }, { tag: '{NAMA_PRODUK}', label: 'Produk' },
-  { tag: '{HARGA_LITER}', label: 'Harga/Liter' }, { tag: '{VOLUME}', label: 'Volume' },
-  { tag: '{TOTAL_HARGA}', label: 'Total Harga' }, { tag: '{TOTAL_RP}', label: 'Total Rp' },
-  { tag: '{OPERATOR}', label: 'Operator' }, { tag: '{METODE_BAYAR}', label: 'Metode Bayar' },
-  { tag: '{PLAT_NO}', label: 'Plat No' },
+  { tag: '{NO_SPBU}', label: 'No SPBU', sample: '31.12345' },
+  { tag: '{NAMA_SPBU}', label: 'Nama SPBU', sample: 'SPBU Sukaraja' },
+  { tag: '{ALAMAT}', label: 'Alamat', sample: 'Jl. Raya No. 88' },
+  { tag: '{SHIFT}', label: 'Shift', sample: '1' },
+  { tag: '{NO_TRANS}', label: 'No. Transaksi', sample: 'TRX-99823' },
+  { tag: '{WAKTU}', label: 'Waktu', sample: '05/08/2026 07:40' },
+  { tag: '{POMPA}', label: 'Pompa', sample: '02' },
+  { tag: '{NAMA_PRODUK}', label: 'Produk', sample: 'PERTAMAX' },
+  { tag: '{HARGA_LITER}', label: 'Harga/Liter', sample: '12.900' },
+  { tag: '{VOLUME}', label: 'Volume', sample: '15.50' },
+  { tag: '{TOTAL_HARGA}', label: 'Total Harga', sample: '199.950' },
+  { tag: '{TOTAL_RP}', label: 'Total Rp', sample: '200.000' },
+  { tag: '{OPERATOR}', label: 'Operator', sample: 'Budi' },
+  { tag: '{METODE_BAYAR}', label: 'Metode Bayar', sample: 'TUNAI' },
+  { tag: '{PLAT_NO}', label: 'Plat No', sample: 'B 1234 ABC' },
 ];
 
 const SPECIAL_SYMBOLS = ['⛽', '🚗', '✓', '★', '☎', '№', 'Rp.', '--------------------------------', '================================'];
@@ -66,11 +72,9 @@ function Ruler({ widthPx, widthMm, zoom, marginMm }) {
   }
   return (
     <div className="umo-ruler" style={{ width: `${widthPx * zoom}px` }}>
-      {/* Margin Left Overlay */}
       {marginPx > 0 && (
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${marginPx}px`, background: 'rgba(234, 67, 53, 0.15)', borderRight: '1px dashed #ea4335', zIndex: 2 }} />
       )}
-      {/* Margin Right Overlay */}
       {marginPx > 0 && (
         <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: `${marginPx}px`, background: 'rgba(234, 67, 53, 0.15)', borderLeft: '1px dashed #ea4335', zIndex: 2 }} />
       )}
@@ -79,15 +83,17 @@ function Ruler({ widthPx, widthMm, zoom, marginMm }) {
   );
 }
 
-// ─── STATUS BAR COMPONENT WITH REALTIME CHAR COUNT ─────────
+// ─── STATUS BAR COMPONENT WITH DYNAMIC MAX CHAR COUNT ─────
 function StatusBar({ zoom, setZoom, isSaved, currentLineChars, paperMarginMm, setPaperMarginMm }) {
-  const isOverLimit = currentLineChars > MAX_CHARS_PER_LINE;
+  const maxChars = paperMarginMm === 0 ? 32 : paperMarginMm === 2 ? 30 : 27;
+  const isOverLimit = currentLineChars > maxChars;
+
   return (
     <div className="umo-statusbar">
       <div className="umo-statusbar-section">
         <span className="umo-statusbar-item">📄 Kertas: 58mm ({PAPER_WIDTH_PX}px)</span>
         <span className={`umo-statusbar-item ${isOverLimit ? 'umo-statusbar-unsaved' : ''}`} style={{ fontWeight: isOverLimit ? 700 : 500 }}>
-          │ Baris ini: {currentLineChars}/{MAX_CHARS_PER_LINE} char {isOverLimit ? '⚠️ Exceeds!' : ''}
+          │ Baris ini: {currentLineChars}/{maxChars} char {isOverLimit ? '⚠️ Limit!' : ''}
         </span>
         <span className={`umo-statusbar-item ${isSaved ? 'umo-statusbar-saved' : 'umo-statusbar-unsaved'}`}>
           │ {isSaved ? '✓ Tersimpan' : '⚠ Belum disimpan'}
@@ -95,18 +101,16 @@ function StatusBar({ zoom, setZoom, isSaved, currentLineChars, paperMarginMm, se
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Margin Selector */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}>
           <span>Margin:</span>
           <select className="umo-select" style={{ height: '22px', fontSize: '0.7rem', padding: '0 16px 0 4px' }}
             value={paperMarginMm} onChange={e => setPaperMarginMm(parseInt(e.target.value))}>
-            <option value={0}>0mm (Full)</option>
-            <option value={2}>2mm (Standar)</option>
-            <option value={4}>4mm (Lebar)</option>
+            <option value={0}>0mm (32 char)</option>
+            <option value={2}>2mm (30 char)</option>
+            <option value={4}>4mm (27 char)</option>
           </select>
         </div>
 
-        {/* Zoom Controls */}
         <div className="umo-zoom-controls">
           <button className="umo-zoom-btn" onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} title="Zoom Out">
             <ZoomOut size={14} />
@@ -147,11 +151,12 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const [activeUnderline, setActiveUnderline] = useState(false);
   const [activeStrikethrough, setActiveStrikethrough] = useState(false);
   const [activeAlignment, setActiveAlignment] = useState('left');
+  const [activeLineHeight, setActiveLineHeight] = useState('1.35');
   const [textWidthPt, setTextWidthPt] = useState('12.5');
   const [textHeightPt, setTextHeightPt] = useState('12.5');
   const [currentLineChars, setCurrentLineChars] = useState(0);
 
-  // Non-blocking notice & insert menu
+  // Non-blocking notices & insert menu
   const [editorNotice, setEditorNotice] = useState('');
   const [galleryNotice, setGalleryNotice] = useState('');
   const [showInsertMenu, setShowInsertMenu] = useState(false);
@@ -305,16 +310,60 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
   const handlePaste = (e) => {
     e.preventDefault();
     let text = e.clipboardData.getData('text/plain') || '';
-    // Strip non-printable chars except newlines
     text = text.replace(/[^\S\n]+/g, ' ').replace(/\r\n/g, '\n');
     document.execCommand('insertText', false, text);
     handleCanvasInput();
   };
 
-  // ─── KEYBOARD SHORTCUTS ───────────────────
+  // ─── KEYBOARD SHORTCUTS & TABLE TAB NAV ───
   const handleEditorKeyDown = (e) => {
     const isCtrl = e.ctrlKey || e.metaKey;
     const key = e.key.toLowerCase();
+
+    // Table Tab Navigation
+    if (e.key === 'Tab') {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        let cell = selection.anchorNode;
+        while (cell && cell !== editorCanvasRef.current && cell.nodeName !== 'TD' && cell.nodeName !== 'TH') {
+          cell = cell.parentNode;
+        }
+        if (cell && (cell.nodeName === 'TD' || cell.nodeName === 'TH')) {
+          e.preventDefault();
+          const table = cell.closest('table');
+          if (table) {
+            const cells = Array.from(table.querySelectorAll('td, th'));
+            const idx = cells.indexOf(cell);
+            let targetIdx = e.shiftKey ? idx - 1 : idx + 1;
+            if (targetIdx >= 0 && targetIdx < cells.length) {
+              const targetCell = cells[targetIdx];
+              const range = document.createRange();
+              range.selectNodeContents(targetCell);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            } else if (!e.shiftKey && targetIdx >= cells.length) {
+              // Add new row to table automatically when pressing Tab on last cell
+              const tr = document.createElement('tr');
+              const colCount = cell.parentElement.children.length;
+              for (let c = 0; c < colCount; c++) {
+                const td = document.createElement('td');
+                td.style.cssText = 'border:1px dashed #bbb;padding:3px 6px;';
+                td.innerText = c === 0 ? `Item Baru` : `Rp 0`;
+                tr.appendChild(td);
+              }
+              table.appendChild(tr);
+              const firstTd = tr.firstElementChild;
+              const range = document.createRange();
+              range.selectNodeContents(firstTd);
+              selection.removeAllRanges();
+              selection.addRange(range);
+              handleCanvasInput();
+            }
+          }
+          return;
+        }
+      }
+    }
 
     // Undo / Redo
     if (isCtrl && key === 'z' && !e.shiftKey) { e.preventDefault(); handleUndo(); return; }
@@ -323,7 +372,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     // Save
     if (isCtrl && key === 's') { e.preventDefault(); handleSaveTemplate(); return; }
 
-    // Formatting Shortcuts: Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Shift+X (Strikethrough)
+    // Formatting Shortcuts: Ctrl+B, Ctrl+I, Ctrl+U, Ctrl+Shift+X
     if (isCtrl && key === 'b') { e.preventDefault(); execCmd('bold'); return; }
     if (isCtrl && key === 'i') { e.preventDefault(); execCmd('italic'); return; }
     if (isCtrl && key === 'u') { e.preventDefault(); execCmd('underline'); return; }
@@ -367,7 +416,17 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
     // Font size
     const pxSize = parseFloat(cs.fontSize) || 12.5;
-    setActiveFontSize((pxSize * 0.75).toFixed(1).replace(/\.0$/, ''));
+    const computedPt = (pxSize * 0.75).toFixed(1).replace(/\.0$/, '');
+    setActiveFontSize(computedPt);
+
+    // Line Height
+    const rawLh = cs.lineHeight;
+    if (rawLh && rawLh !== 'normal') {
+      const parsedLh = (parseFloat(rawLh) / pxSize).toFixed(2);
+      if (['1.10', '1.1', '1.35', '1.60', '1.6', '2.00', '2.0'].includes(parsedLh)) {
+        setActiveLineHeight(parsedLh);
+      }
+    }
 
     // Bold / Italic / Underline / Strikethrough
     const weight = cs.fontWeight;
@@ -472,9 +531,11 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     if (editorCanvasRef.current) editorCanvasRef.current.focus();
   };
 
+  // Restores saved selection before HTML insertion to guarantee insertion at user's cursor
   const insertHtmlAtCursor = (htmlStr) => {
     if (editorCanvasRef.current) {
       editorCanvasRef.current.focus();
+      restoreSavedSelectionRange();
       document.execCommand('insertHTML', false, htmlStr);
       handleCanvasInput();
     }
@@ -546,6 +607,12 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
     if (file) { const r = new FileReader(); r.onload = (ev) => setEditingTemplate(prev => ({ ...prev, customLogoUrl: ev.target.result })); r.readAsDataURL(file); }
   };
 
+  // Dynamic font size options to ensure custom sizes are supported in dropdown
+  const dynamicSizeOptions = [...SIZE_OPTIONS];
+  if (activeFontSize && !SIZE_OPTIONS.some(s => s.value === activeFontSize)) {
+    dynamicSizeOptions.unshift({ value: activeFontSize, label: `${activeFontSize} (Custom)` });
+  }
+
   // Compiled preview
   const compiledPreview = parseReceiptTemplate(editingTemplate.htmlContent || editingTemplate.pattern, formData || {});
 
@@ -581,9 +648,16 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
             {templates.map(tpl => {
               const sample = parseReceiptTemplate(tpl.htmlContent || tpl.pattern, formData || {});
               const mb = tpl.logoMarginBottom !== undefined ? tpl.logoMarginBottom : -4;
+              const isOfficial = tpl.badge === 'Official' || (!tpl.id.startsWith('custom_') && !tpl.id.startsWith('default_custom'));
               return (
                 <div key={tpl.id} className="template-card" style={{ padding: '20px', background: 'rgba(15,23,42,0.7)' }}>
-                  <span className="template-badge">{tpl.badge || 'Template'}</span>
+                  <span className="template-badge" style={{
+                    background: isOfficial ? 'rgba(16, 185, 129, 0.2)' : 'rgba(6, 182, 212, 0.2)',
+                    color: isOfficial ? 'var(--accent-emerald)' : 'var(--accent-cyan)',
+                    border: `1px solid ${isOfficial ? 'rgba(16, 185, 129, 0.3)' : 'rgba(6, 182, 212, 0.3)'}`
+                  }}>
+                    {tpl.badge || 'Template'}
+                  </span>
                   <div style={{ marginBottom: '12px' }}>
                     <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>{tpl.name}</h3>
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{tpl.description}</p>
@@ -623,8 +697,8 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
             </div>
           </div>
 
-          {/* SPLIT LAYOUT: Editor + Preview */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px' }}>
+          {/* SPLIT LAYOUT: Editor + Sticky Preview */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px', alignItems: 'start' }}>
 
             {/* ── LEFT: EDITOR ── */}
             <div className="umo-editor-container">
@@ -637,7 +711,9 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                 <input
                   type="text" className="umo-header-input" value={editingTemplate.name}
                   onChange={e => { setEditingTemplate(prev => ({ ...prev, name: e.target.value })); setIsSaved(false); }}
+                  onKeyDown={e => { if (e.key === 'Enter') { e.target.blur(); handleSaveTemplate(); } }}
                   placeholder="Nama Template..."
+                  title="Tekan Enter untuk simpan"
                 />
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                   <button className="umo-btn" onClick={handleUndo} disabled={historyIndex <= 0} title="Undo (Ctrl+Z)"><Undo2 size={16} /></button>
@@ -663,7 +739,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <select className="umo-select" style={{ width: '64px' }} value={activeFontSize}
                     onChange={e => applyInlineSelectionStyle({ fontSize: `${e.target.value}pt` })}>
                     <option value="" disabled>pt</option>
-                    {SIZE_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    {dynamicSizeOptions.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </select>
                 </div>
 
@@ -694,14 +770,14 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <span className="umo-toolbar-label" style={{ marginRight: '2px' }}>W</span>
                   <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
                     value={textWidthPt} onChange={e => setTextWidthPt(e.target.value)}
-                    onMouseDown={(e) => { saveCurrentSelectionRange(); }}
+                    onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomWidthPt(textWidthPt); } }}
                     title="Lebar Teks (pt) — Enter untuk apply" />
                   <span className="umo-toolbar-label" style={{ marginLeft: '4px', marginRight: '2px' }}>H</span>
                   <input type="number" className="umo-input-pt" step="0.5" min="4" max="60"
                     value={textHeightPt} onChange={e => setTextHeightPt(e.target.value)}
-                    onMouseDown={(e) => { saveCurrentSelectionRange(); }}
+                    onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); applyCustomHeightPt(textHeightPt); } }}
                     title="Tinggi Teks (pt) — Enter untuk apply" />
@@ -711,7 +787,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
                 {/* Group 6: Line Spacing */}
                 <div className="umo-toolbar-group">
-                  <select className="umo-select" style={{ width: '56px' }} defaultValue=""
+                  <select className="umo-select" style={{ width: '56px' }} value={activeLineHeight}
                     onChange={e => applyBlockLineStyle({ lineHeight: e.target.value })} title="Line Spacing">
                     <option value="" disabled>⇕</option>
                     <option value="1.1">1.1</option>
@@ -729,6 +805,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     className={`umo-btn ${showInsertMenu ? 'active' : ''}`}
                     style={{ width: 'auto', padding: '0 8px', gap: '4px', display: 'flex', alignItems: 'center', fontSize: '0.75rem' }}
                     onClick={() => {
+                      saveCurrentSelectionRange();
                       if (!showInsertMenu) updateInsertMenuPos();
                       setShowInsertMenu(v => !v);
                     }} title="Sisipkan elemen ke struk">
@@ -772,7 +849,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                   <div className="umo-insert-menu-section-label">🏷️ Variabel Tag Template</div>
                   <div className="umo-insert-tags-grid">
                     {AVAILABLE_TAGS.map(t => (
-                      <button key={t.tag} className="umo-tag-chip" title={t.label}
+                      <button key={t.tag} className="umo-tag-chip" title={`${t.label}: ${t.sample}`}
                         onClick={() => { insertHtmlAtCursor(`<span>${t.tag}</span>`); setShowInsertMenu(false); }}>
                         {t.tag}
                       </button>
@@ -837,8 +914,8 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               />
             </div>
 
-            {/* ── RIGHT: LIVE PREVIEW + SETTINGS ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* ── RIGHT: STICKY LIVE PREVIEW + SETTINGS ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'sticky', top: '16px', alignSelf: 'flex-start' }}>
               {/* Live Preview */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -887,13 +964,20 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     style={{ width: '100%', accentColor: 'var(--accent-emerald)' }} />
                 </div>
 
-                {/* Logo Upload */}
+                {/* Logo Upload & Reset */}
                 <div onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }} onDragLeave={() => setIsDragOver(false)} onDrop={handleDropImage}
                   style={{ border: `2px dashed ${isDragOver ? 'var(--accent-cyan)' : 'var(--border-color)'}`, background: isDragOver ? 'rgba(6,182,212,0.15)' : 'rgba(15,23,42,0.6)', borderRadius: '8px', padding: '12px', textAlign: 'center', cursor: 'pointer' }}>
                   <Upload size={18} style={{ color: 'var(--accent-cyan)', marginBottom: '4px' }} />
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Drop logo di sini</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Drop logo di sini atau pilih file</div>
                   <input type="file" accept="image/*" onChange={handleSelectFileImage} style={{ marginTop: '6px', fontSize: '0.72rem' }} />
                 </div>
+
+                {editingTemplate.customLogoUrl && (
+                  <button className="btn btn-danger btn-block" style={{ marginTop: '10px', fontSize: '0.75rem', padding: '6px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                    onClick={() => setEditingTemplate(prev => ({ ...prev, customLogoUrl: '' }))}>
+                    <RotateCcw size={14} /> Reset ke Logo Pertamina SVG
+                  </button>
+                )}
               </div>
             </div>
           </div>
