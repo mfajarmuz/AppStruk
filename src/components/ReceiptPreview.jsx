@@ -131,14 +131,32 @@ export default function ReceiptPreview({
     if (receiptRef.current) {
       try {
         // Capture exact DOM pixels as 203 DPI crisp thermal PNG bitmap
+        // High resolution capture @ scale: 4 for ultra-crisp 203/300 DPI thermal printing
         const canvas = await html2canvas(receiptRef.current, {
-          scale: 2,
+          scale: 4,
           backgroundColor: '#ffffff',
           useCORS: true,
           logging: false
         });
+
+        // Binarize canvas to pure 1-bit Monochromatic (100% Solid Black / 100% Solid White)
+        // Eliminates gray anti-aliased pixels that cause printer drivers to print fuzzy/dithered edges
+        const ctx = canvas.getContext('2d');
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const luminance = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          const val = luminance < 210 ? 0 : 255; // Sharp threshold at 210
+          data[i] = val;     // Red
+          data[i + 1] = val; // Green
+          data[i + 2] = val; // Blue
+          data[i + 3] = 255; // Alpha
+        }
+        ctx.putImageData(imgData, 0, 0);
+
         const imgUrl = canvas.toDataURL('image/png');
-        const imageHtml = `<div className="receipt-wrapper" style="width:100%; text-align:center; margin:0; padding:0; background:#fff;"><img src="${imgUrl}" style="width:100%; height:auto; display:block; margin:0 auto;" /></div>`;
+        const imageHtml = `<div class="receipt-wrapper" style="width:100%; text-align:center; margin:0; padding:0; background:#fff;"><img src="${imgUrl}" style="width:100%; height:auto; display:block; margin:0 auto; image-rendering:pixelated; image-rendering:crisp-edges;" /></div>`;
         onPrint(imageHtml);
         return;
       } catch (err) {

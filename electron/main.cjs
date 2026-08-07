@@ -234,6 +234,8 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               height: auto !important;
               display: block !important;
               margin: 0 auto !important;
+              image-rendering: pixelated !important;
+              image-rendering: crisp-edges !important;
             }
             table {
               width: 100%;
