@@ -180,11 +180,11 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               margin: 0;
               padding: 0;
               width: ${printableWidthMm}mm;
-              font-family: 'Courier New', Courier, 'Consolas', monospace;
+              font-family: 'Consolas', 'Courier New', monospace;
               font-size: ${fontSizeVal};
-              font-weight: 600;
-              line-height: 1.25;
-              letter-spacing: -0.4px;
+              font-weight: 500;
+              line-height: 1.35;
+              letter-spacing: 0px;
               color: #000000;
               background: #ffffff;
               -webkit-print-color-adjust: exact;
@@ -195,18 +195,21 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
             }
             .receipt-wrapper {
               width: ${printableWidthMm}mm !important;
+              max-width: ${printableWidthMm}mm !important;
               box-shadow: none !important;
               border: none !important;
               background: #ffffff !important;
               color: #000000 !important;
-              font-family: 'Courier New', Courier, 'Consolas', monospace !important;
+              font-family: 'Consolas', 'Courier New', monospace !important;
               font-size: ${fontSizeVal} !important;
-              font-weight: 600 !important;
-              line-height: 1.25 !important;
-              letter-spacing: -0.4px !important;
+              font-weight: 500 !important;
+              line-height: 1.35 !important;
+              letter-spacing: 0px !important;
               transform: none !important;
-              margin: 0 !important;
-              padding: 0 !important;
+              margin: 0 auto !important;
+              padding-left: 2.5mm !important;
+              padding-right: 2.5mm !important;
+              box-sizing: border-box !important;
             }
             span {
               display: inline-block;
