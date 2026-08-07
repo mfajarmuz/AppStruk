@@ -195,12 +195,12 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
             html, body {
               margin: 0;
               padding: 0;
-              width: ${printableWidthMm}mm;
-              font-family: 'Consolas', 'Courier New', monospace;
-              font-size: ${fontSizeVal};
-              font-weight: 500;
-              line-height: 1.35;
-              letter-spacing: 0px;
+              width: ${paperWidthMm}mm;
+              font-family: 'Lucida Console', 'Consolas', 'Courier New', monospace;
+              font-size: ${fontSizeVal || '7.2pt'};
+              font-weight: 400;
+              line-height: 1.3;
+              letter-spacing: -0.2px;
               color: #000000;
               background: #ffffff;
               -webkit-print-color-adjust: exact;
@@ -210,33 +210,32 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               box-sizing: border-box;
             }
             .receipt-wrapper {
-              width: ${printableWidthMm}mm !important;
-              max-width: ${printableWidthMm}mm !important;
+              width: 48mm !important;
+              max-width: 48mm !important;
+              margin-left: 5mm !important;
+              margin-right: auto !important;
+              padding: 0 1mm !important;
               box-shadow: none !important;
               border: none !important;
               background: #ffffff !important;
               color: #000000 !important;
-              font-family: 'Consolas', 'Courier New', monospace !important;
-              font-size: ${fontSizeVal} !important;
-              font-weight: 500 !important;
-              line-height: 1.35 !important;
-              letter-spacing: 0px !important;
+              font-family: 'Lucida Console', 'Consolas', 'Courier New', monospace !important;
+              font-size: ${fontSizeVal || '7.2pt'} !important;
+              font-weight: 400 !important;
+              line-height: 1.3 !important;
+              letter-spacing: -0.2px !important;
               transform: none !important;
-              margin: 0 auto !important;
-              padding-left: 2.5mm !important;
-              padding-right: 2.5mm !important;
               box-sizing: border-box !important;
             }
             span {
               display: inline-block;
               transform-origin: left center;
             }
-            img {
-              max-width: 100% !important;
-              width: 100% !important;
+            img, svg {
+              max-width: 68% !important;
               height: auto !important;
               display: block !important;
-              margin: 0 auto !important;
+              margin: 0 auto 4px auto !important;
               image-rendering: pixelated !important;
               image-rendering: crisp-edges !important;
             }
