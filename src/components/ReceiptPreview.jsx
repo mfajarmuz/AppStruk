@@ -225,7 +225,7 @@ export default function ReceiptPreview({
                         )}
                       </div>
                     )}
-                    <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '7.5pt', fontWeight: 600, lineHeight: '1.25', letterSpacing: '-0.4px' }} />
+                    <div dangerouslySetInnerHTML={{ __html: compiledText }} style={{ fontFamily: "'GB18030', 'SimSun', 'SimHei', 'Lucida Console', 'Consolas', 'Courier New', monospace", fontSize: '7.5pt', fontWeight: 600, lineHeight: '1.25', letterSpacing: '-0.4px' }} />
                   </div>
                 </div>
               </div>

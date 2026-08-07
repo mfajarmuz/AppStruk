@@ -15,6 +15,8 @@ const HISTORY_MAX = 100;
 const HISTORY_DEBOUNCE_MS = 400;
 
 const FONT_OPTIONS = [
+  { value: "'GB18030', 'SimSun', 'SimHei', 'NSimSun', 'Lucida Console', 'Consolas', monospace", label: "★ GB18030 (Thermal POS Standard)" },
+  { value: "'Lucida Console', 'Consolas', 'Courier New', monospace", label: "Lucida Console (SPBU Presisi)" },
   { value: "'Courier New', Courier, monospace", label: "Courier New" },
   { value: "'Consolas', 'Courier New', monospace", label: "Consolas" },
   { value: "'JetBrains Mono', monospace", label: "JetBrains Mono" },
