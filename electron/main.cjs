@@ -196,18 +196,24 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               margin: 0;
               padding: 0;
               width: ${paperWidthMm}mm;
-              font-family: 'GB18030', 'SimSun', 'SimHei', 'NSimSun', 'Lucida Console', 'Consolas', 'Courier New', monospace;
-              font-size: ${fontSizeVal || '7.2pt'};
-              font-weight: 400;
-              line-height: 1.3;
-              letter-spacing: -0.2px;
-              color: #000000;
-              background: #ffffff;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
+              font-family: 'GB18030', 'SimSun', 'SimHei', 'NSimSun', 'Lucida Console', 'Consolas', 'Courier New', monospace !important;
+              font-size: ${fontSizeVal || '7.2pt'} !important;
+              font-weight: 400 !important;
+              line-height: 1.3 !important;
+              letter-spacing: -0.2px !important;
+              color: #000000 !important;
+              background: #ffffff !important;
+              -webkit-font-smoothing: none !important;
+              font-smooth: never !important;
+              text-rendering: geometricPrecision !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
             * {
               box-sizing: border-box;
+              -webkit-font-smoothing: none !important;
+              font-smooth: never !important;
+              text-rendering: geometricPrecision !important;
             }
             .receipt-wrapper {
               width: 48mm !important;
@@ -226,6 +232,14 @@ ipcMain.handle('print-receipt', async (event, { htmlData, printerName, settings 
               letter-spacing: -0.2px !important;
               transform: none !important;
               box-sizing: border-box !important;
+              -webkit-font-smoothing: none !important;
+              font-smooth: never !important;
+              text-rendering: geometricPrecision !important;
+            }
+            div, p, span, td, th {
+              -webkit-font-smoothing: none !important;
+              font-smooth: never !important;
+              text-rendering: geometricPrecision !important;
             }
             span {
               display: inline-block;
