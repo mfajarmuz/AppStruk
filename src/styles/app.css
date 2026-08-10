@@ -323,6 +323,20 @@ body {
   letter-spacing: -0.4px;
 }
 
+/* THERMAL HARDWARE FONT DEFINITIONS & FALLBACKS */
+@font-face {
+  font-family: 'FontA';
+  src: local('GB18030'), local('Lucida Console'), local('Consolas'), local('Courier New');
+}
+@font-face {
+  font-family: 'FontB';
+  src: local('Consolas'), local('Lucida Console'), local('Courier New');
+}
+@font-face {
+  font-family: 'FontC';
+  src: local('Courier New'), local('Consolas');
+}
+
 /* FONT UTILITIES & STYLES */
 .text-cyan { color: var(--accent-cyan); }
 .text-blue { color: var(--accent-blue); }

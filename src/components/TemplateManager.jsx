@@ -15,7 +15,10 @@ const HISTORY_MAX = 100;
 const HISTORY_DEBOUNCE_MS = 400;
 
 const FONT_OPTIONS = [
-  { value: "'GB18030', 'SimSun', 'SimHei', 'NSimSun', 'Lucida Console', 'Consolas', monospace", label: "★ GB18030 (Thermal POS Standard)" },
+  { value: "'FontA', 'ESC-POS-FontA', 'GB18030', 'Lucida Console', 'Consolas', monospace", label: "★ Font A (Thermal Standard 12x24)" },
+  { value: "'FontB', 'ESC-POS-FontB', 'Small Thermal', 'Consolas', 'Courier New', monospace", label: "★ Font B (Thermal Condensed 9x17)" },
+  { value: "'FontC', 'ESC-POS-FontC', 'Micro Thermal', 'Courier New', monospace", label: "★ Font C (Thermal Micro 8x16)" },
+  { value: "'GB18030', 'SimSun', 'SimHei', 'NSimSun', 'Lucida Console', 'Consolas', monospace", label: "★ GB18030 (Thermal Hardware)" },
   { value: "'Lucida Console', 'Consolas', 'Courier New', monospace", label: "Lucida Console (SPBU Presisi)" },
   { value: "'Courier New', Courier, monospace", label: "Courier New" },
   { value: "'Consolas', 'Courier New', monospace", label: "Consolas" },
@@ -1115,7 +1118,7 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               <div className="umo-toolbar">
                 {/* Group 1: Font Family */}
                 <div className="umo-toolbar-group">
-                  <select className="umo-select" style={{ width: '120px' }} value={activeFontFamily}
+                  <select className="umo-select" style={{ width: '160px' }} value={activeFontFamily}
                     onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
                     onChange={e => applyInlineSelectionStyle({ fontFamily: e.target.value })}>
