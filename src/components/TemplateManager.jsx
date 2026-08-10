@@ -1116,8 +1116,8 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
 
               {/* STATIC ACTION BAR (Google Docs Style) */}
               <div className="umo-toolbar">
-                {/* Group 1: Font Family */}
-                <div className="umo-toolbar-group">
+                {/* Group 1: Font Family Dropdown & Quick Presets */}
+                <div className="umo-toolbar-group" style={{ gap: '4px' }}>
                   <select className="umo-select" style={{ width: '160px' }} value={activeFontFamily}
                     onMouseDown={() => saveCurrentSelectionRange()}
                     onFocus={saveCurrentSelectionRange}
@@ -1125,6 +1125,26 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
                     <option value="" disabled>Font</option>
                     {FONT_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
                   </select>
+                  <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
+                    <button className={`umo-btn ${activeFontFamily.includes('FontA') ? 'active' : ''}`} style={{ fontSize: '0.7rem', padding: '0 5px' }}
+                      onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                      onClick={() => applyInlineSelectionStyle({ fontFamily: "'FontA', 'ESC-POS-FontA', 'GB18030', 'Lucida Console', 'Consolas', monospace" })}
+                      title="Font A (Thermal Standard 12x24)">
+                      Font A
+                    </button>
+                    <button className={`umo-btn ${activeFontFamily.includes('FontB') ? 'active' : ''}`} style={{ fontSize: '0.7rem', padding: '0 5px' }}
+                      onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                      onClick={() => applyInlineSelectionStyle({ fontFamily: "'FontB', 'ESC-POS-FontB', 'Small Thermal', 'Consolas', 'Courier New', monospace" })}
+                      title="Font B (Thermal Condensed 9x17)">
+                      Font B
+                    </button>
+                    <button className={`umo-btn ${activeFontFamily.includes('FontC') ? 'active' : ''}`} style={{ fontSize: '0.7rem', padding: '0 5px' }}
+                      onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                      onClick={() => applyInlineSelectionStyle({ fontFamily: "'FontC', 'ESC-POS-FontC', 'Micro Thermal', 'Courier New', monospace" })}
+                      title="Font C (Thermal Micro 8x16)">
+                      Font C
+                    </button>
+                  </div>
                 </div>
 
                 <div className="umo-toolbar-divider" />
@@ -1424,6 +1444,24 @@ export default function TemplateManager({ templates, setTemplates, onSelectTempl
               {/* Settings Panel */}
               <div className="card" style={{ padding: '14px' }}>
                 <div className="card-title" style={{ fontSize: '0.85rem', marginBottom: '12px' }}>⚙️ Pengaturan Template</div>
+
+                {/* Interactive Variable Tag Inspector */}
+                <div className="form-group" style={{ marginBottom: '12px', background: 'rgba(15,23,42,0.6)', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--accent-emerald)', marginBottom: '8px' }}>
+                    <span>🏷️ Inspector Variabel Tag ({AVAILABLE_TAGS.length})</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Klik untuk sisipkan</span>
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxHeight: '140px', overflowY: 'auto', paddingRight: '2px' }}>
+                    {AVAILABLE_TAGS.map(t => (
+                      <button key={t.tag} type="button" className="umo-tag-chip" style={{ fontSize: '0.7rem', padding: '3px 6px' }}
+                        title={`Sisipkan ${t.tag} (${t.label}: ${t.sample})`}
+                        onMouseDown={(e) => { e.preventDefault(); saveCurrentSelectionRange(); }}
+                        onClick={() => insertHtmlAtCursor(`<span>${t.tag}</span>`)}>
+                        {t.tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 <div className="form-group" style={{ marginBottom: '10px' }}>
                   <label className="form-label">Deskripsi</label>
