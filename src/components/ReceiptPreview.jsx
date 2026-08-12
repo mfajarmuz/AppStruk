@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Printer, Eye, Settings2 } from 'lucide-react';
+import { Printer, Eye } from 'lucide-react';
 
 export function PertaminaLogoExact({ width = 160 }) {
   return (
@@ -66,7 +66,6 @@ export default function ReceiptPreview({ template, formData, printerSettings, on
         </button>
       </div>
 
-      {/* Thermal Receipt Paper Canvas */}
       <div style={{ background: '#1e293b', padding: '20px', borderRadius: '8px', border: '1px solid var(--border-color)', width: '100%', display: 'flex', justifyContent: 'center' }}>
         <div
           ref={receiptRef}
@@ -90,12 +89,10 @@ export default function ReceiptPreview({ template, formData, printerSettings, on
             paddingBottom: '16px'
           }}
         >
-          {/* Logo Header */}
           <div style={{ textAlign: 'center', marginBottom: `${template?.logoMarginBottom || -4}px` }}>
             <PertaminaLogoExact width={template?.logoWidth || 160} />
           </div>
 
-          {/* Compiled HTML Template Text */}
           <div dangerouslySetInnerHTML={{ __html: compiledHtml }} />
         </div>
       </div>

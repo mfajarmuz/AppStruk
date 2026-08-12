@@ -46,7 +46,6 @@ export default function PrinterConfig({ printerSettings, setPrinterSettings, onT
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-        {/* Printer Device Selection */}
         <div className="form-group" style={{ gridColumn: 'span 2' }}>
           <label className="form-label">Pilih Device Printer Windows</label>
           <select
@@ -63,7 +62,6 @@ export default function PrinterConfig({ printerSettings, setPrinterSettings, onT
           </select>
         </div>
 
-        {/* Paper Width Selection */}
         <div className="form-group">
           <label className="form-label">Lebar Kertas Thermal</label>
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -78,7 +76,6 @@ export default function PrinterConfig({ printerSettings, setPrinterSettings, onT
           </div>
         </div>
 
-        {/* Font Size Selection */}
         <div className="form-group">
           <label className="form-label">Ukuran Font Thermal (pt)</label>
           <select
@@ -94,7 +91,6 @@ export default function PrinterConfig({ printerSettings, setPrinterSettings, onT
         </div>
       </div>
 
-      {/* Action Test Print */}
       <div style={{ marginTop: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button type="button" className="btn btn-primary" onClick={handleTestPrint}>
           <Play size={16} /> Test Cetak Struk Percobaan

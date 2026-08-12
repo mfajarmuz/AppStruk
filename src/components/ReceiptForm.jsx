@@ -1,5 +1,5 @@
 import React from 'react';
-import { Fuel, RefreshCw, Calculator, User, Clock, MapPin, Hash, DollarSign } from 'lucide-react';
+import { Fuel, RefreshCw, Clock, MapPin, Hash, DollarSign, User } from 'lucide-react';
 
 const BBM_PRODUCTS = [
   { name: 'PERTALITE', price: 10000 },
@@ -15,7 +15,6 @@ export default function ReceiptForm({ formData, setFormData, onResetToDefault })
     setFormData(prev => {
       const next = { ...prev, [field]: val };
       
-      // Auto-calculate Total Rp if Volume or HargaLiter changed
       if (field === 'hargaLiter' || field === 'volume') {
         const h = parseFloat(field === 'hargaLiter' ? val : prev.hargaLiter) || 0;
         const v = parseFloat(field === 'volume' ? val : prev.volume) || 0;
@@ -58,9 +57,7 @@ export default function ReceiptForm({ formData, setFormData, onResetToDefault })
         </button>
       </div>
 
-      {/* Grid Inputs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
-        {/* SPBU Header */}
         <div className="form-group">
           <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <Hash size={14} /> No. SPBU
@@ -80,7 +77,6 @@ export default function ReceiptForm({ formData, setFormData, onResetToDefault })
           <input type="text" className="form-input" value={formData.alamat || ''} onChange={e => handleChange('alamat', e.target.value)} placeholder="Jl. Raya Sukaraja No. 88" />
         </div>
 
-        {/* Transaksi Info */}
         <div className="form-group">
           <label className="form-label">Shift</label>
           <input type="text" className="form-input" value={formData.shift || ''} onChange={e => handleChange('shift', e.target.value)} placeholder="1" />
@@ -106,7 +102,6 @@ export default function ReceiptForm({ formData, setFormData, onResetToDefault })
           <input type="text" className="form-input" value={formData.pompa || ''} onChange={e => handleChange('pompa', e.target.value)} placeholder="02" />
         </div>
 
-        {/* Product Selection */}
         <div className="form-group" style={{ gridColumn: 'span 2' }}>
           <label className="form-label">Pilih Produk BBM</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -123,7 +118,6 @@ export default function ReceiptForm({ formData, setFormData, onResetToDefault })
           </div>
         </div>
 
-        {/* Numbers */}
         <div className="form-group">
           <label className="form-label">Harga / Liter (Rp)</label>
           <input type="text" className="form-input" value={formData.hargaLiter || ''} onChange={e => handleChange('hargaLiter', e.target.value)} placeholder="12.900" />

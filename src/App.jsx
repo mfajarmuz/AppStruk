@@ -5,6 +5,7 @@ import ReceiptPreview from './components/ReceiptPreview';
 import TemplateEditor from './components/TemplateEditor';
 import PrinterConfig from './components/PrinterConfig';
 import { DEFAULT_PERTAMINA_TEMPLATE } from './data/defaultTemplate';
+import './styles/app.css';
 
 const INITIAL_FORM_DATA = {
   noSpbu: '34.46125',
@@ -72,7 +73,6 @@ export default function App() {
           alert(`Gagal mencetak: ${res?.error || 'Unknown error'}`);
         }
       } else {
-        // Web Fallback Print
         const printWin = window.open('', '_blank');
         if (printWin) {
           printWin.document.write(`<html><head><title>Struk Thermal</title></head><body>${htmlContent}</body></html>`);
@@ -93,7 +93,6 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* App Header */}
       <header className="app-header">
         <div className="app-logo">
           <Fuel size={24} style={{ color: 'var(--accent-blue)' }} />
@@ -113,14 +112,12 @@ export default function App() {
         </nav>
       </header>
 
-      {/* Notification Badge */}
       {notice && (
         <div style={{ background: 'var(--accent-emerald)', color: '#ffffff', padding: '10px 24px', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
           <CheckCircle2 size={18} /> {notice}
         </div>
       )}
 
-      {/* Main Content Area */}
       <main className="app-main">
         {activeTab === 'form' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px', alignItems: 'start' }}>

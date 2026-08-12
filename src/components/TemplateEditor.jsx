@@ -26,7 +26,6 @@ export default function TemplateEditor({ template, setTemplate }) {
         </button>
       </div>
 
-      {/* Tags Quick Inserter */}
       <div style={{ marginBottom: '14px', background: 'rgba(15,23,42,0.6)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
         <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-emerald)', marginBottom: '8px' }}>
           <Tag size={14} /> Variabel Tag Dinamis (Klik untuk Sisipkan):
@@ -40,7 +39,6 @@ export default function TemplateEditor({ template, setTemplate }) {
         </div>
       </div>
 
-      {/* Editor Area */}
       <div className="form-group">
         <label className="form-label">Kode HTML & Pola Struk</label>
         <textarea
