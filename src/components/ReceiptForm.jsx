@@ -1,363 +1,161 @@
 import React from 'react';
-import { Fuel, Clock, RefreshCw, LayoutTemplate, Image } from 'lucide-react';
+import { Fuel, RefreshCw, Calculator, User, Clock, MapPin, Hash, DollarSign } from 'lucide-react';
 
-export default function ReceiptForm({
-  formData,
-  setFormData,
-  fuels,
-  templates,
-  selectedTemplateId,
-  setSelectedTemplateId
-}) {
-  const handleFuelSelect = (fuelId) => {
-    const selectedFuel = fuels.find(f => f.id === fuelId);
-    if (!selectedFuel) return;
+const BBM_PRODUCTS = [
+  { name: 'PERTALITE', price: 10000 },
+  { name: 'PERTAMAX', price: 12900 },
+  { name: 'PERTAMAX TURBO', price: 14400 },
+  { name: 'PERTAMINA DEX', price: 15100 },
+  { name: 'DEXLITE', price: 14550 },
+  { name: 'SOLAR', price: 6800 },
+];
 
-    const price = selectedFuel.price;
-    const currentAmount = formData.totalAmount || 300000;
-    const calculatedLiter = price > 0 ? parseFloat((currentAmount / price).toFixed(2)) : 0;
-
-    setFormData(prev => ({
-      ...prev,
-      fuelId: selectedFuel.id,
-      fuelName: selectedFuel.name,
-      pricePerLiter: price,
-      liter: calculatedLiter,
-      totalAmount: currentAmount,
-      paidAmount: currentAmount
-    }));
-  };
-
-  const handleAmountChange = (amount) => {
-    const numAmount = parseFloat(amount) || 0;
-    const price = formData.pricePerLiter || 21150;
-    const calculatedLiter = price > 0 ? parseFloat((numAmount / price).toFixed(2)) : 0;
-
-    setFormData(prev => ({
-      ...prev,
-      totalAmount: numAmount,
-      paidAmount: numAmount,
-      liter: calculatedLiter
-    }));
-  };
-
-  const handleLiterChange = (literVal) => {
-    const numLiter = parseFloat(literVal) || 0;
-    const price = formData.pricePerLiter || 21150;
-    const calculatedAmount = Math.round(numLiter * price);
-
-    setFormData(prev => ({
-      ...prev,
-      liter: numLiter,
-      totalAmount: calculatedAmount,
-      paidAmount: calculatedAmount
-    }));
-  };
-
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        setFormData(prev => ({
-          ...prev,
-          customLogoUrl: uploadEvent.target.result
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const generateTransactionNo = () => {
-    const randomNum = Math.floor(1000000 + Math.random() * 9000000);
-    setFormData(prev => ({
-      ...prev,
-      transactionNo: `${randomNum}`
-    }));
-  };
-
-  const setCurrentDateTime = () => {
-    const now = new Date();
-    const formattedDate = now.toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
+export default function ReceiptForm({ formData, setFormData, onResetToDefault }) {
+  const handleChange = (field, val) => {
+    setFormData(prev => {
+      const next = { ...prev, [field]: val };
+      
+      // Auto-calculate Total Rp if Volume or HargaLiter changed
+      if (field === 'hargaLiter' || field === 'volume') {
+        const h = parseFloat(field === 'hargaLiter' ? val : prev.hargaLiter) || 0;
+        const v = parseFloat(field === 'volume' ? val : prev.volume) || 0;
+        if (h > 0 && v > 0) {
+          next.totalHarga = Math.round(h * v).toLocaleString('id-ID');
+        }
+      }
+      return next;
     });
-    const formattedTime = now.toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).replace(/\./g, ':');
+  };
 
-    setFormData(prev => ({
-      ...prev,
-      date: formattedDate,
-      time: formattedTime,
-      dateTime: `${formattedDate} ${formattedTime}`
-    }));
+  const handleProductSelect = (prod) => {
+    setFormData(prev => {
+      const h = prod.price;
+      const v = parseFloat(prev.volume) || 0;
+      return {
+        ...prev,
+        namaProduk: prod.name,
+        hargaLiter: prod.price.toString(),
+        totalHarga: (v > 0 && h > 0) ? Math.round(h * v).toLocaleString('id-ID') : prev.totalHarga
+      };
+    });
+  };
+
+  const handleSetCurrentTime = () => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    handleChange('waktu', `${dateStr} ${timeStr}`);
   };
 
   return (
-    <div className="scrollable-panel">
-      {/* 1. Pemilih Template Struk */}
-      <div className="card">
-        <div className="card-title">
-          <LayoutTemplate size={18} className="text-blue" />
-          <span>Pilih Template Struk</span>
-        </div>
-        <div className="template-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
-          {templates.map(tpl => (
-            <div
-              key={tpl.id}
-              className={`template-card ${selectedTemplateId === tpl.id ? 'active' : ''}`}
-              onClick={() => setSelectedTemplateId(tpl.id)}
-            >
-              <span className="template-badge">{tpl.badge || 'Template'}</span>
-              <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '4px' }}>{tpl.name}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tpl.description}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+    <div className="card" style={{ padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <h2 style={{ fontSize: '1.1rem', margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-blue)' }}>
+          <Fuel size={20} /> Form Transaksi BBM
+        </h2>
+        <button type="button" className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '0.78rem' }} onClick={onResetToDefault}>
+          <RefreshCw size={14} /> Reset Form
+        </button>
       </div>
 
-      {/* 2. Form Input Data Transaksi yang Akan Dicetak */}
-      <div className="card">
-        <div className="card-title">
-          <Fuel size={18} className="text-emerald" />
-          <span>Masukkan Data Transaksi yang Akan Dicetak</span>
+      {/* Grid Inputs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+        {/* SPBU Header */}
+        <div className="form-group">
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Hash size={14} /> No. SPBU
+          </label>
+          <input type="text" className="form-input" value={formData.noSpbu || ''} onChange={e => handleChange('noSpbu', e.target.value)} placeholder="Contoh: 34.46125" />
         </div>
 
-        <div className="form-grid">
-          {/* Total Amount */}
-          <div className="form-group">
-            <label className="form-label" style={{ color: 'var(--accent-emerald)', fontWeight: 600 }}>
-              Total Harga / Pembayaran (Rp)
-            </label>
-            <input
-              type="number"
-              className="form-input"
-              style={{ fontSize: '1.1rem', fontWeight: 700, borderColor: 'var(--accent-emerald)' }}
-              value={formData.totalAmount}
-              onChange={e => handleAmountChange(e.target.value)}
-            />
-            <div className="quick-pills">
-              {[50000, 100000, 150000, 200000, 300000, 500000].map(val => (
-                <button key={val} type="button" className="pill-btn" onClick={() => handleAmountChange(val)}>
-                  Rp {(val/1000)}rb
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="form-group">
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <MapPin size={14} /> Nama SPBU
+          </label>
+          <input type="text" className="form-input" value={formData.namaSpbu || ''} onChange={e => handleChange('namaSpbu', e.target.value)} placeholder="Contoh: SPBU Sukaraja" />
+        </div>
 
-          {/* Product Select */}
-          <div className="form-group">
-            <label className="form-label">Nama Produk (BBM)</label>
-            <select
-              className="form-select"
-              value={formData.fuelId}
-              onChange={e => handleFuelSelect(e.target.value)}
-            >
-              {fuels.map(fuel => (
-                <option key={fuel.id} value={fuel.id}>
-                  {fuel.name} - Rp {fuel.price.toLocaleString('id-ID')}/L
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <label className="form-label">Alamat SPBU</label>
+          <input type="text" className="form-input" value={formData.alamat || ''} onChange={e => handleChange('alamat', e.target.value)} placeholder="Jl. Raya Sukaraja No. 88" />
+        </div>
 
-          {/* Volume */}
-          <div className="form-group">
-            <label className="form-label" style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>
-              Volume (L)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              className="form-input"
-              style={{ fontSize: '1.1rem', fontWeight: 700, borderColor: 'var(--accent-cyan)' }}
-              value={formData.liter}
-              onChange={e => handleLiterChange(e.target.value)}
-            />
-          </div>
+        {/* Transaksi Info */}
+        <div className="form-group">
+          <label className="form-label">Shift</label>
+          <input type="text" className="form-input" value={formData.shift || ''} onChange={e => handleChange('shift', e.target.value)} placeholder="1" />
+        </div>
 
-          {/* Transaction No */}
-          <div className="form-group">
-            <label className="form-label">
-              <span>No. Transaksi (No. Trans)</span>
+        <div className="form-group">
+          <label className="form-label">No. Transaksi</label>
+          <input type="text" className="form-input" value={formData.noTrans || ''} onChange={e => handleChange('noTrans', e.target.value)} placeholder="TRX-99823" />
+        </div>
+
+        <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> Waktu & Tanggal</span>
+            <button type="button" style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', fontSize: '0.75rem' }} onClick={handleSetCurrentTime}>
+              [Ganti Waktu Sekarang]
+            </button>
+          </label>
+          <input type="text" className="form-input" value={formData.waktu || ''} onChange={e => handleChange('waktu', e.target.value)} placeholder="12/08/2026 09:15:00" />
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Pulau / Pompa</label>
+          <input type="text" className="form-input" value={formData.pompa || ''} onChange={e => handleChange('pompa', e.target.value)} placeholder="02" />
+        </div>
+
+        {/* Product Selection */}
+        <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <label className="form-label">Pilih Produk BBM</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {BBM_PRODUCTS.map(p => (
               <button
-                type="button"
-                style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.75rem' }}
-                onClick={generateTransactionNo}
+                key={p.name} type="button"
+                className={`pill-btn ${formData.namaProduk === p.name ? 'active' : ''}`}
+                onClick={() => handleProductSelect(p)}
+                style={{ padding: '6px 10px', fontSize: '0.78rem' }}
               >
-                <RefreshCw size={12} /> Auto
+                {p.name} (Rp {p.price.toLocaleString('id-ID')})
               </button>
-            </label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.transactionNo}
-              onChange={e => setFormData({ ...formData, transactionNo: e.target.value })}
-            />
+            ))}
           </div>
+        </div>
 
-          {/* Tanggal Transaksi */}
-          <div className="form-group">
-            <label className="form-label">
-              <span>Tanggal Transaksi</span>
-              <button
-                type="button"
-                style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.75rem' }}
-                onClick={setCurrentDateTime}
-              >
-                <Clock size={12} /> Hari Ini
-              </button>
-            </label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.date || (formData.dateTime ? formData.dateTime.split(' ')[0] : '04/08/2026')}
-              onChange={e => {
-                const newDate = e.target.value;
-                setFormData(prev => ({
-                  ...prev,
-                  date: newDate,
-                  dateTime: `${newDate} ${prev.time || (prev.dateTime ? prev.dateTime.split(' ')[1] || '07:52:30' : '07:52:30')}`
-                }));
-              }}
-              placeholder="DD/MM/YYYY"
-            />
-          </div>
+        {/* Numbers */}
+        <div className="form-group">
+          <label className="form-label">Harga / Liter (Rp)</label>
+          <input type="text" className="form-input" value={formData.hargaLiter || ''} onChange={e => handleChange('hargaLiter', e.target.value)} placeholder="12.900" />
+        </div>
 
-          {/* Jam / Waktu Transaksi */}
-          <div className="form-group">
-            <label className="form-label">
-              <span>Jam / Waktu Transaksi</span>
-              <button
-                type="button"
-                style={{ background: 'none', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '0.75rem' }}
-                onClick={setCurrentDateTime}
-              >
-                <Clock size={12} /> Jam Sekarang
-              </button>
-            </label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.time || (formData.dateTime ? formData.dateTime.split(' ')[1] || '07:52:30' : '07:52:30')}
-              onChange={e => {
-                const newTime = e.target.value;
-                setFormData(prev => ({
-                  ...prev,
-                  time: newTime,
-                  dateTime: `${prev.date || (prev.dateTime ? prev.dateTime.split(' ')[0] || '04/08/2026' : '04/08/2026')} ${newTime}`
-                }));
-              }}
-              placeholder="HH:MM:SS"
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label">Volume (Liter)</label>
+          <input type="text" className="form-input" value={formData.volume || ''} onChange={e => handleChange('volume', e.target.value)} placeholder="15.50" />
+        </div>
 
-          {/* Shift */}
-          <div className="form-group">
-            <label className="form-label">Shift Kerja</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.shift || '2'}
-              onChange={e => setFormData({ ...formData, shift: e.target.value })}
-            />
-          </div>
+        <div className="form-group" style={{ gridColumn: 'span 2' }}>
+          <label className="form-label" style={{ color: 'var(--accent-emerald)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <DollarSign size={14} /> Total Harga (Rp)
+          </label>
+          <input type="text" className="form-input" style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--accent-emerald)' }}
+            value={formData.totalHarga || ''} onChange={e => handleChange('totalHarga', e.target.value)} placeholder="199.950" />
+        </div>
 
-          {/* Pump No */}
-          <div className="form-group">
-            <label className="form-label">Pulau / Pompa</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.pumpNo}
-              onChange={e => setFormData({ ...formData, pumpNo: e.target.value })}
-              placeholder="2"
-            />
-          </div>
+        <div className="form-group">
+          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <User size={14} /> Operator
+          </label>
+          <input type="text" className="form-input" value={formData.operator || ''} onChange={e => handleChange('operator', e.target.value)} placeholder="Budi" />
+        </div>
 
-          {/* Operator */}
-          <div className="form-group">
-            <label className="form-label">Nama Operator</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.operatorName}
-              onChange={e => setFormData({ ...formData, operatorName: e.target.value })}
-              placeholder="AGUS"
-            />
-          </div>
-
-          {/* Payment Method */}
-          <div className="form-group">
-            <label className="form-label">Metode Pembayaran</label>
-            <select
-              className="form-select"
-              value={formData.paymentMethod}
-              onChange={e => setFormData({ ...formData, paymentMethod: e.target.value })}
-            >
-              <option value="CASH">CASH</option>
-              <option value="TUNAI">TUNAI</option>
-              <option value="QRIS / MYPERTAMINA">QRIS / MYPERTAMINA</option>
-              <option value="DEBIT MANDIRI">DEBIT MANDIRI</option>
-              <option value="DEBIT BCA">DEBIT BCA</option>
-            </select>
-          </div>
-
-          {/* SPBU No */}
-          <div className="form-group">
-            <label className="form-label">No. SPBU</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.spbuNo}
-              onChange={e => setFormData({ ...formData, spbuNo: e.target.value })}
-            />
-          </div>
-
-          {/* SPBU Name */}
-          <div className="form-group">
-            <label className="form-label">Nama SPBU</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.spbuName}
-              onChange={e => setFormData({ ...formData, spbuName: e.target.value })}
-            />
-          </div>
-
-          {/* SPBU Address */}
-          <div className="form-group full-width">
-            <label className="form-label">Alamat SPBU</label>
-            <input
-              type="text"
-              className="form-input"
-              value={formData.spbuAddress}
-              onChange={e => setFormData({ ...formData, spbuAddress: e.target.value })}
-            />
-          </div>
-
-          {/* Custom Logo Upload */}
-          <div className="form-group full-width">
-            <label className="form-label">
-              <span>Logo Header Struk (Opsional: Upload Foto Logo Custom)</span>
-              {formData.customLogoUrl && (
-                <button
-                  type="button"
-                  style={{ color: 'var(--accent-red)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem' }}
-                  onClick={() => setFormData({ ...formData, customLogoUrl: '' })}
-                >
-                  Reset Ke Logo Pertamina Vektor
-                </button>
-              )}
-            </label>
-            <input type="file" accept="image/*" className="form-input" onChange={handleLogoUpload} />
-          </div>
+        <div className="form-group">
+          <label className="form-label">Metode Bayar</label>
+          <select className="form-select" value={formData.metodeBayar || 'CASH'} onChange={e => handleChange('metodeBayar', e.target.value)}>
+            <option value="CASH">CASH / TUNAI</option>
+            <option value="QRIS">QRIS / MYPERTAMINA</option>
+            <option value="DEBIT">DEBIT / MANDIRI / BCA</option>
+          </select>
         </div>
       </div>
     </div>

@@ -1,24 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
-
 :root {
-  --bg-dark: #090d16;
-  --bg-card: rgba(15, 23, 42, 0.75);
-  --bg-card-hover: rgba(30, 41, 59, 0.85);
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-hover: rgba(59, 130, 246, 0.5);
-  
+  --bg-dark: #0f172a;
+  --bg-card: #1e293b;
+  --bg-input: #0f172a;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
+  --border-color: #334155;
   
   --accent-blue: #3b82f6;
+  --accent-blue-hover: #2563eb;
   --accent-cyan: #06b6d4;
   --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  --accent-red: #ef4444;
   
-  --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.15);
-  --radius-lg: 16px;
-  --radius-md: 10px;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'GB18030', 'Consolas', 'Lucida Console', 'Courier New', monospace;
 }
 
 * {
@@ -30,179 +25,78 @@
 body {
   background-color: var(--bg-dark);
   color: var(--text-main);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow: hidden;
-  height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* App Container Layout */
 .app-container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #090d16 70%);
 }
 
-/* HEADER NAVBAR */
-.navbar {
-  height: 64px;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(16px);
+.app-header {
+  background-color: #1e293b;
   border-bottom: 1px solid var(--border-color);
+  padding: 12px 24px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  z-index: 100;
-}
-
-/* BRAND LOGO & TITLE ALIGNMENT */
-.nav-brand {
-  display: flex;
   align-items: center;
-  gap: 12px;
 }
 
-.brand-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2));
-  border: 1px solid rgba(59, 130, 246, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent-cyan);
-}
-
-.brand-title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #60a5fa, #38bdf8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1.2;
-}
-
-.brand-subtitle {
-  font-size: 0.72rem;
-  color: var(--accent-emerald);
-  font-weight: 600;
-}
-
-/* NAV TABS CONTAINER & STYLED BUTTONS */
-.nav-tabs {
-  display: flex;
-  gap: 6px;
-  background: rgba(15, 23, 42, 0.6);
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
-}
-
-.tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 6px;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.tab-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.tab-btn.active {
-  color: #ffffff;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-}
-
-/* PRINTER STATUS BADGE */
-.printer-status-badge {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid var(--border-color);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  box-shadow: 0 0 8px currentColor;
-}
-
-/* MAIN CONTENT */
-.main-content {
-  flex: 1;
-  padding: 20px 24px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* GENERATOR LAYOUT */
-.generator-layout {
-  display: grid;
-  grid-template-columns: 1fr 340px;
-  gap: 24px;
-  height: 100%;
-  overflow: hidden;
-}
-
-.scrollable-panel {
-  overflow-y: auto;
-  padding-right: 6px;
-}
-
-.scrollable-panel::-webkit-scrollbar {
-  width: 6px;
-}
-
-.scrollable-panel::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
-}
-
-/* CARDS */
-.card {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-glow);
-}
-
-.card-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 16px;
+.app-logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--text-main);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #ffffff;
 }
 
-/* FORMS */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
+.app-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.nav-tab:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-tab.active {
+  background: var(--accent-blue);
+  color: #ffffff;
+}
+
+.app-main {
+  flex: 1;
+  padding: 20px 24px;
+}
+
+/* Cards & UI Controls */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .form-group {
@@ -211,757 +105,86 @@ body {
   gap: 6px;
 }
 
-.form-group.full-width {
-  grid-column: 1 / -1;
-}
-
 .form-label {
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .form-input, .form-select {
-  background: rgba(0, 0, 0, 0.4);
+  background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  color: #ffffff;
   padding: 8px 12px;
-  color: var(--text-main);
-  font-size: 0.9rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-family: inherit;
   outline: none;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s;
 }
 
 .form-input:focus, .form-select:focus {
   border-color: var(--accent-blue);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
-/* BUTTONS */
+/* Buttons */
 .btn {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  gap: 6px;
+  transition: all 0.2s;
 }
 
 .btn-primary {
   background: var(--accent-blue);
-  color: #fff;
+  color: #ffffff;
 }
 .btn-primary:hover {
-  background: #2563eb;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-}
-
-.btn-success {
-  background: var(--accent-emerald);
-  color: #fff;
-}
-.btn-success:hover {
-  background: #059669;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  background: var(--accent-blue-hover);
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
   border: 1px solid var(--border-color);
 }
 .btn-secondary:hover {
   background: rgba(255, 255, 255, 0.15);
 }
 
-.btn-danger {
-  background: rgba(244, 63, 94, 0.2);
-  color: var(--accent-rose);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-}
-.btn-danger:hover {
-  background: var(--accent-rose);
-  color: #fff;
-}
-
-.btn-block {
-  width: 100%;
-}
-
-.btn-lg {
-  padding: 12px 24px;
-  font-size: 1rem;
-}
-
-/* PREVIEW SIDE PANEL */
-.preview-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  height: 100%;
-}
-
-/* AUTHENTIC PHYSICAL THERMAL RECEIPT CANVAS (58mm @ 203 DPI = 384px) */
-.receipt-wrapper {
-  background: #ffffff;
-  color: #000000;
-  width: 384px;
-  padding: 16px 0px;
-  border-radius: 4px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  position: relative;
-  font-family: 'Courier New', Courier, 'Consolas', monospace;
-  font-size: 7.5pt;
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.4px;
-}
-
-/* THERMAL HARDWARE FONT DEFINITIONS & FALLBACKS */
-@font-face {
-  font-family: 'FontA';
-  src: local('GB18030'), local('Lucida Console'), local('Consolas'), local('Courier New');
-}
-@font-face {
-  font-family: 'FontB';
-  src: local('Consolas'), local('Lucida Console'), local('Courier New');
-}
-@font-face {
-  font-family: 'FontC';
-  src: local('Courier New'), local('Consolas');
-}
-
-/* FONT UTILITIES & STYLES */
-.text-cyan { color: var(--accent-cyan); }
-.text-blue { color: var(--accent-blue); }
-.text-emerald { color: var(--accent-emerald); }
-.text-amber { color: var(--accent-amber); }
-.text-rose { color: var(--accent-rose); }
-
-/* GRID & TEMPLATES */
-.template-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-
-.template-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.template-card:hover {
-  border-color: var(--accent-blue);
-  transform: translateY(-2px);
-}
-
-.template-card.active {
-  border-color: var(--accent-cyan);
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.25);
-  background: rgba(6, 182, 212, 0.1);
-}
-
-.template-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  font-size: 0.7rem;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: rgba(59, 130, 246, 0.2);
-  color: var(--accent-blue);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-/* PILL BUTTONS FOR FONT TOOLBAR */
 .pill-btn {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.6);
   border: 1px solid var(--border-color);
-  color: var(--text-main);
-  padding: 6px 10px;
+  color: var(--text-muted);
   border-radius: 6px;
-  font-size: 0.8rem;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.15s ease;
+  transition: all 0.2s;
 }
-
 .pill-btn:hover {
-  background: rgba(255, 255, 255, 0.18);
-  border-color: var(--accent-cyan);
+  border-color: var(--accent-blue);
+  color: #ffffff;
 }
-
 .pill-btn.active {
   background: var(--accent-blue);
-  color: #fff;
+  color: #ffffff;
   border-color: var(--accent-blue);
 }
 
-/* ============================================ */
-/* UMO EDITOR - GOOGLE DOCS STYLE REDESIGN     */
-/* ============================================ */
-
-/* Editor Workspace Container (neutral grey background) */
-.umo-workspace {
-  background: #e8ebed;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 400px;
-  position: relative;
-  overflow-y: auto;
+/* Animations */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* Editor Header Bar (template name + save) */
-.umo-header {
-  background: #ffffff;
-  border-bottom: 1px solid #dadce0;
-  padding: 6px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.umo-header-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #202124;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.umo-header-title svg {
-  color: #1a73e8;
-}
-
-.umo-header-input {
-  border: 1px solid transparent;
-  background: transparent;
-  color: #202124;
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
-  outline: none;
-  min-width: 200px;
-  transition: all 0.15s ease;
-}
-
-.umo-header-input:hover {
-  border-color: #dadce0;
-}
-
-.umo-header-input:focus {
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
-}
-
-/* Static Single-Row Action Bar (Google Docs style toolbar) */
-.umo-toolbar {
-  background: #f8f9fa;
-  border-bottom: 1px solid #dadce0;
-  padding: 4px 8px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-
-.umo-toolbar::-webkit-scrollbar {
-  height: 3px;
-}
-
-.umo-toolbar::-webkit-scrollbar-thumb {
-  background: #dadce0;
-  border-radius: 2px;
-}
-
-/* Toolbar Group (separated by vertical dividers) */
-.umo-toolbar-group {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 0 4px;
-}
-
-/* Vertical Divider Between Groups */
-.umo-toolbar-divider {
-  width: 1px;
-  height: 24px;
-  background: #dadce0;
-  margin: 0 4px;
-  flex-shrink: 0;
-}
-
-/* Toolbar Button (28x28 standard like Google Docs) */
-.umo-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #444746;
-  transition: background 0.1s ease;
-  flex-shrink: 0;
-  padding: 0;
-}
-
-.umo-btn:hover {
-  background: #e8eaed;
-}
-
-.umo-btn.active {
-  background: #e8f0fe;
-  color: #1a73e8;
-}
-
-.umo-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.umo-btn[title]:hover::after {
-  /* tooltip handled by native title */
-}
-
-/* Toolbar Dropdown Select (Font, Size) */
-.umo-select {
-  height: 28px;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: 4px;
-  padding: 0 24px 0 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #202124;
-  cursor: pointer;
-  outline: none;
-  appearance: auto;
-  transition: all 0.1s ease;
-}
-
-.umo-select:hover {
-  background: #e8eaed;
-  border-color: #dadce0;
-}
-
-.umo-select:focus {
-  border-color: #1a73e8;
-  background: #ffffff;
-}
-
-/* Toolbar Numeric Input (Width/Height pt) */
-.umo-input-pt {
-  width: 52px;
-  height: 28px;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  padding: 0 4px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #202124;
-  text-align: center;
-  outline: none;
-  background: #ffffff;
-  transition: border-color 0.15s ease;
-}
-
-.umo-input-pt:hover {
-  border-color: #bdc1c6;
-}
-
-.umo-input-pt:focus {
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.15);
-}
-
-.umo-input-pt-scaled {
-  border-color: #06b6d4 !important;
-  background: #ecfeff !important;
-  color: #0891b2 !important;
-  font-weight: 700 !important;
-}
-
-/* Toolbar Label (small grey text above controls) */
-.umo-toolbar-label {
-  font-size: 0.6rem;
-  color: #70757a;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
-/* Toolbar Stack (label + control stacked vertically) */
-.umo-toolbar-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 1px;
-}
-
-/* Ruler Above Paper Canvas */
-.umo-ruler {
-  width: 384px;
-  height: 22px;
-  background: #f8f9fa;
-  border: 1px solid #dadce0;
-  border-bottom: none;
-  border-radius: 2px 2px 0 0;
-  display: flex;
-  align-items: flex-end;
-  position: relative;
-  user-select: none;
-  overflow: hidden;
-}
-
-.umo-ruler-tick {
-  position: absolute;
-  bottom: 0;
-  width: 1px;
-  background: #bdc1c6;
-}
-
-.umo-ruler-tick.major {
-  height: 10px;
-  background: #70757a;
-}
-
-.umo-ruler-tick.minor {
-  height: 5px;
-}
-
-.umo-ruler-label {
-  position: absolute;
-  bottom: 10px;
-  font-size: 0.5rem;
-  color: #70757a;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-/* Paper Canvas (384px = 58mm at 203 DPI) */
-.umo-paper {
-  width: 384px;
-  background: #ffffff;
-  color: #000000;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08);
-  padding: 20px 16px;
-  min-height: 340px;
-  position: relative;
-  font-family: 'Courier New', Courier, 'Consolas', monospace;
-  font-size: 12.5px;
-  line-height: 1.35;
-  letter-spacing: -0.2px;
-}
-
-.umo-paper-editable {
-  outline: none;
-  cursor: text;
-  min-height: 260px;
-}
-
-/* Status Bar at Bottom */
-.umo-statusbar {
-  background: #f8f9fa;
-  border-top: 1px solid #dadce0;
-  height: 28px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.7rem;
-  color: #70757a;
-  user-select: none;
-}
-
-.umo-statusbar-section {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.umo-statusbar-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.umo-statusbar-saved {
-  color: #188038;
-  font-weight: 500;
-}
-
-.umo-statusbar-unsaved {
-  color: #ea4335;
-  font-weight: 500;
-}
-
-/* Zoom Controls in Status Bar */
-.umo-zoom-controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.umo-zoom-btn {
-  width: 22px;
-  height: 22px;
-  border: none;
-  background: transparent;
-  border-radius: 4px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #70757a;
-  transition: background 0.1s ease;
-}
-
-.umo-zoom-btn:hover {
-  background: #e8eaed;
-  color: #202124;
-}
-
-.umo-zoom-slider {
-  width: 80px;
-  height: 4px;
-  accent-color: #1a73e8;
-}
-
-.umo-zoom-label {
-  font-size: 0.7rem;
-  color: #202124;
-  font-weight: 500;
-  min-width: 36px;
-  text-align: center;
-  cursor: pointer;
-}
-
-.umo-zoom-label:hover {
-  background: #e8eaed;
-  border-radius: 4px;
-  padding: 2px 4px;
-}
-
-/* Floating Selection Bubble Menu (absolute in canvas container) */
-.umo-bubble-menu {
-  position: absolute;
-  z-index: 100;
-  background: #ffffff;
-  border: 1px solid #dadce0;
-  border-radius: 8px;
-  padding: 4px 6px;
-  display: flex;
-  gap: 2px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
-  animation: umo-fade-in 0.12s ease;
-}
-
-@keyframes umo-fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Insert Dropdown Menu (absolute within relative parent) */
-.umo-insert-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: -8px;
-  z-index: 200;
-  background: #ffffff;
-  border: 1px solid #dadce0;
-  border-radius: 10px;
-  padding: 4px 0 8px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
-  width: 320px;
-  max-height: 420px;
-  overflow-y: auto;
-  animation: umo-fade-in 0.12s ease;
-}
-
-/* Insert Dropdown Menu (fixed position - not clipped by overflow:hidden) */
-.umo-insert-menu-fixed {
-  position: fixed;
-  z-index: 9999;
-  background: #ffffff;
-  border: 1px solid #dadce0;
-  border-radius: 10px;
-  padding: 4px 0 8px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
-  width: 320px;
-  max-height: 420px;
-  overflow-y: auto;
-  animation: umo-fade-in 0.12s ease;
-}
-
-.umo-insert-menu::-webkit-scrollbar,
-.umo-insert-menu-fixed::-webkit-scrollbar {
-  width: 5px;
-}
-
-.umo-insert-menu::-webkit-scrollbar-thumb,
-.umo-insert-menu-fixed::-webkit-scrollbar-thumb {
-  background: #dadce0;
-  border-radius: 3px;
-}
-
-.umo-insert-menu-section-label {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #70757a;
-  padding: 6px 14px 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.umo-insert-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 16px;
-  font-size: 0.82rem;
-  color: #202124;
-  cursor: pointer;
-  border: none;
-  background: transparent;
-  width: 100%;
-  text-align: left;
-  transition: background 0.1s ease;
-}
-
-.umo-insert-menu-item:hover {
-  background: #f1f3f4;
-}
-
-.umo-insert-menu-item svg {
-  color: #70757a;
-  flex-shrink: 0;
-}
-
-.umo-insert-menu-divider {
-  height: 1px;
-  background: #e8eaed;
-  margin: 4px 0;
-}
-
-/* Symbol Chips (compact grid buttons for emoji/symbols) */
-.umo-symbol-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 32px;
-  height: 30px;
-  border: 1px solid #e8eaed;
-  border-radius: 6px;
-  background: #f8f9fa;
-  cursor: pointer;
-  font-size: 0.85rem;
-  padding: 2px 6px;
-  transition: all 0.1s ease;
-  color: #202124;
-}
-
-.umo-symbol-chip:hover {
-  background: #e8f0fe;
-  border-color: #1a73e8;
-  color: #1a73e8;
-}
-
-/* Tag Variable Chips Grid */
-.umo-insert-tags-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 4px 12px 6px;
-}
-
-.umo-tag-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
-  border: 1px solid #d2e3fc;
-  border-radius: 4px;
-  background: #e8f0fe;
-  color: #1a73e8;
-  cursor: pointer;
-  transition: all 0.1s ease;
-}
-
-.umo-tag-chip:hover {
-  background: #1a73e8;
-  color: #ffffff;
-  border-color: #1a73e8;
-}
-
-/* Non-blocking Notice Toast */
-.umo-notice {
-  background: #e8f0fe;
-  color: #174ea6;
-  padding: 6px 16px;
-  font-size: 0.78rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 500;
-  border-bottom: 1px solid #d2e3fc;
-}
-
-/* Editor Container (wraps header + toolbar + canvas + statusbar) */
-.umo-editor-container {
-  border: 1px solid #dadce0;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-/* BROWSER FALLBACK PRINTING (@media print) */
-@media print {
-  body * {
-    visibility: hidden !important;
-  }
-  .receipt-wrapper, .receipt-wrapper * {
-    visibility: visible !important;
-  }
-  .receipt-wrapper {
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 58mm !important;
-    box-shadow: none !important;
-    border: none !important;
-    padding-top: 0 !important;
-    transform: none !important;
-  }
-  @page {
-    size: 58mm auto;
-    margin: 0;
-  }
+.spin {
+  animation: spin 1s linear infinite;
 }
