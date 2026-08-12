@@ -95,7 +95,7 @@ export default function ReceiptPreview({ template, formData, printerSettings, on
             paddingRight: `${marginPx}px`,
             background: '#ffffff',
             color: '#000000',
-            fontFamily: "'GB18030', 'Consolas', 'Lucida Console', 'Courier New', monospace",
+            fontFamily: "'FontA', 'ESC-POS-FontA', 'GB18030', 'Lucida Console', 'Consolas', 'Courier New', monospace",
             fontSize: '7.5pt',
             fontWeight: 500,
             lineHeight: 1.25,

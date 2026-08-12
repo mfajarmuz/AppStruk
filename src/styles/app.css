@@ -13,7 +13,7 @@
   --accent-red: #ef4444;
   
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'GB18030', 'Consolas', 'Lucida Console', 'Courier New', monospace;
+  --font-mono: 'FontA', 'ESC-POS-FontA', 'GB18030', 'Lucida Console', 'Consolas', 'Courier New', monospace;
 }
 
 * {

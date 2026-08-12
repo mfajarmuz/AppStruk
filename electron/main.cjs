@@ -149,7 +149,7 @@ ipcMain.handle('print-receipt', async (event, { html, paperWidthMm = 58, setting
               margin: 0;
               padding: 0;
               width: ${paperWidthMm}mm;
-              font-family: 'GB18030', 'Consolas', 'Lucida Console', 'Courier New', monospace !important;
+              font-family: 'FontA', 'ESC-POS-FontA', 'GB18030', 'Lucida Console', 'Consolas', 'Courier New', monospace !important;
               font-size: ${fontSizeVal} !important;
               font-weight: 500 !important;
               line-height: 1.25 !important;
@@ -178,7 +178,7 @@ ipcMain.handle('print-receipt', async (event, { html, paperWidthMm = 58, setting
               border: none !important;
               background: #ffffff !important;
               color: #000000 !important;
-              font-family: 'GB18030', 'Consolas', 'Lucida Console', 'Courier New', monospace !important;
+              font-family: 'FontA', 'ESC-POS-FontA', 'GB18030', 'Lucida Console', 'Consolas', 'Courier New', monospace !important;
               font-size: ${fontSizeVal} !important;
               font-weight: 500 !important;
               line-height: 1.25 !important;
