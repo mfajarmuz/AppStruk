@@ -12,9 +12,9 @@ export function PertaminaLogoExact({ width = 160 }) {
   );
 }
 
-export function parseReceiptTemplate(htmlTemplate, data) {
-  if (!htmlTemplate) return '';
-  let result = htmlTemplate;
+export function parseReceiptTemplate(plainTextTemplate, data) {
+  if (!plainTextTemplate) return '';
+  let result = plainTextTemplate;
   const map = {
     '{NO_SPBU}': data.noSpbu || '34.46125',
     '{NAMA_SPBU}': data.namaSpbu || 'SPBU Sukaraja',
@@ -36,7 +36,24 @@ export function parseReceiptTemplate(htmlTemplate, data) {
   Object.entries(map).forEach(([tag, val]) => {
     result = result.replaceAll(tag, val);
   });
-  return result;
+
+  // Convert plain text lines to HTML lines with white-space pre-wrap
+  const lines = result.split('\n');
+  const htmlLines = lines.map((line, idx) => {
+    // Header lines (No SPBU, Nama SPBU, Alamat) and footer lines -> auto center alignment
+    const isCenteredHeaderOrFooter = idx < 3 || line.includes('TERIMA KASIH');
+    const alignStyle = isCenteredHeaderOrFooter ? 'text-align: center;' : 'text-align: left;';
+    const fontWeight = idx === 0 || line.includes('Total Harga') ? 'font-weight: bold;' : 'font-weight: normal;';
+    
+    // Replace dashed divider with clean border or keep as text
+    if (line.trim().startsWith('---') || line.trim().startsWith('===')) {
+      return `<div style="border-top: 1px dashed #000; margin: 4px 0;"></div>`;
+    }
+    
+    return `<div style="white-space: pre-wrap; ${alignStyle} ${fontWeight} margin: 0; padding: 0;">${line || '&nbsp;'}</div>`;
+  });
+
+  return htmlLines.join('');
 }
 
 export default function ReceiptPreview({ template, formData, printerSettings, onPrint }) {
@@ -89,7 +106,7 @@ export default function ReceiptPreview({ template, formData, printerSettings, on
             paddingBottom: '16px'
           }}
         >
-          <div style={{ textAlign: 'center', marginBottom: `${template?.logoMarginBottom || -4}px` }}>
+          <div style={{ textAlign: 'center', marginBottom: `${template?.logoMarginBottom || 4}px` }}>
             <PertaminaLogoExact width={template?.logoWidth || 160} />
           </div>
 

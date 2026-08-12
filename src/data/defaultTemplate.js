@@ -1,26 +1,26 @@
 export const DEFAULT_PERTAMINA_TEMPLATE = {
   id: 'pertamina-standard',
-  name: 'SPBU Pertamina Standar (Resmi)',
+  name: 'SPBU Pertamina Standar (Resmi Plain Text)',
   paperWidthMm: 58,
   paperMarginMm: 2,
   logoWidth: 160,
-  logoMarginBottom: -4,
-  content: `<div style="text-align:center; font-weight:bold; margin:0; padding:0;">{NO_SPBU}</div>
-<div style="text-align:center; margin:0; padding:0;">{NAMA_SPBU}</div>
-<div style="text-align:center; margin:0; padding:0;">{ALAMAT}</div>
-<div style="display:flex; justify-content:space-between; margin:0; padding:0;"><span>Shift: {SHIFT}</span><span>No. Trans: {NO_TRANS}</span></div>
-<div style="margin:0; padding:0;">Waktu: {WAKTU}</div>
-<div style="border-top:1px dashed #000; margin:6px 0;"></div>
-<div style="margin:0; padding:0;">Pulau/Pompa: {POMPA}</div>
-<div style="margin:0; padding:0;">Nama Produk: {NAMA_PRODUK}</div>
-<div style="margin:0; padding:0;">Harga/Liter: Rp. {HARGA_LITER}</div>
-<div style="margin:0; padding:0;">Volume     : (L) {VOLUME}</div>
-<div style="margin:0; padding:0;">Total Harga: Rp. {TOTAL_HARGA}</div>
-<div style="margin:0; padding:0;">Operator   : {OPERATOR}</div>
-<div style="border-top:1px dashed #000; margin:6px 0;"></div>
-<div style="display:flex; justify-content:space-between; margin-top:4px;"><span>{METODE_BAYAR}</span><span>Rp. {TOTAL_HARGA}</span></div>
-<div style="border-top:1px dashed #000; margin:6px 0;"></div>
-<div style="text-align:center; margin-top:4px;">TERIMA KASIH & SELAMAT JALAN</div>`
+  logoMarginBottom: 4,
+  content: `{NO_SPBU}
+{NAMA_SPBU}
+{ALAMAT}
+Shift: {SHIFT}            No. Trans: {NO_TRANS}
+Waktu: {WAKTU}
+-----------------------------------------
+Pulau/Pompa: {POMPA}
+Nama Produk: {NAMA_PRODUK}
+Harga/Liter: Rp. {HARGA_LITER}
+Volume     : (L) {VOLUME}
+Total Harga: Rp. {TOTAL_HARGA}
+Operator   : {OPERATOR}
+-----------------------------------------
+{METODE_BAYAR}                   Rp. {TOTAL_HARGA}
+-----------------------------------------
+TERIMA KASIH & SELAMAT JALAN`
 };
 
 export const AVAILABLE_TAGS = [
