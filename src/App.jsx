@@ -36,7 +36,7 @@ export default function App() {
   });
   const [printerSettings, setPrinterSettings] = useState(() => {
     const saved = localStorage.getItem('thermal_printer_settings');
-    return saved ? JSON.parse(saved) : { printerName: '', paperWidth: 58, paperMargin: 2, fontSize: 7.5, silentPrint: true };
+    return saved ? JSON.parse(saved) : { printerName: '', paperWidth: 58, paperMargin: 2, fontSize: 13, silentPrint: true };
   });
 
   const [notice, setNotice] = useState('');

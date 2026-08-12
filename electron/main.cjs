@@ -133,7 +133,7 @@ ipcMain.handle('print-receipt', async (event, { html, paperWidthMm = 58, setting
 
     const printerName = settings?.printerName || '';
     const isSilent = settings?.silentPrint !== undefined ? settings.silentPrint : true;
-    const fontSizeVal = settings?.fontSize ? `${settings.fontSize}pt` : '7.5pt';
+    const fontSizeVal = settings?.fontSize ? `${settings.fontSize}pt` : '13pt';
 
     const fullHtml = `
       <!DOCTYPE html>

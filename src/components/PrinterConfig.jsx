@@ -80,13 +80,13 @@ export default function PrinterConfig({ printerSettings, setPrinterSettings, onT
           <label className="form-label">Ukuran Font Thermal (pt)</label>
           <select
             className="form-select"
-            value={printerSettings.fontSize || 7.5}
+            value={printerSettings.fontSize || 13}
             onChange={e => setPrinterSettings({ ...printerSettings, fontSize: parseFloat(e.target.value) })}
           >
-            <option value={7.0}>7.0 pt (Kecil Presisi)</option>
-            <option value={7.5}>7.5 pt (Standar Ideal 58mm)</option>
-            <option value={8.0}>8.0 pt (Sedang)</option>
-            <option value={8.5}>8.5 pt (Besar)</option>
+            <option value={13.0}>13.0 pt (★ Standar Font A 12x24 - Ukuran 13)</option>
+            <option value={11.0}>11.0 pt (Sedang)</option>
+            <option value={9.0}>9.0 pt (Rapat)</option>
+            <option value={7.5}>7.5 pt (Kecil Presisi)</option>
           </select>
         </div>
       </div>
